@@ -11,14 +11,14 @@ func (w *Win) FrameScroll(dl int) {
 	org := w.org
 	if dl < 0 {
 		org = w.BackNL(org, -dl)
-		w.SetOrigin(org, false)
+		w.SetOrigin(org, true)
 	} else {
 		if org+w.Frame.Nchars == w.Len() {
 			return
 		}
 		r := w.Frame.Bounds()
 		org += w.IndexOf(image.Pt(r.Min.X, r.Min.Y+dl*w.Font.Dy()))
-		w.SetOrigin(org, false)
+		w.SetOrigin(org, true)
 	}
 }
 
@@ -68,7 +68,7 @@ func (w *Win) Fill() {
 		if n == 0 {
 			break
 		}
-		rp := w.Bytes()[qep:qep+n]
+		rp := w.Bytes()[qep : qep+n]
 		nl := w.MaxLine() - w.Line()
 		m := 0
 		i := int64(0)
@@ -86,7 +86,7 @@ func (w *Win) Fill() {
 		w.Mark()
 	}
 }
-	
+
 func (w *Win) SetOrigin(org int64, exact bool) {
 	org = clamp(org, 0, w.Len())
 	if org == w.org {
@@ -123,19 +123,16 @@ func (w *Win) SetOrigin(org int64, exact bool) {
 	}
 	w.Fill()
 	w.org = org
-	
 	//w.drawsb()
 	q0, q1 := w.Dot()
 	w.Select(q0, q1)
-//	if P0, P1 := w.Frame.Dot(); fix && P1 > P0 {
-//		w.Redraw(w.PointOf(P1-1), P1-1, P1, true)
-//	}
-
-fix=fix
-//	if q0 < w.org && q1 < w.org {
-//		p0, p1 := w.Frame.Dot()
-//		w.Redraw(w.PointOf(p0), p0, p1, false)
-//	}
+	if P0, P1 := w.Frame.Dot(); fix && P1 > P0 {
+		w.Redraw(w.PointOf(P1-1), P1-1, P1, true)
+	}
+	//	if q0 < w.org && q1 < w.org {
+	//		p0, p1 := w.Frame.Dot()
+	//		w.Redraw(w.PointOf(p0), p0, p1, false)
+	//	}
 }
 
 func min(a, b int64) int64 {

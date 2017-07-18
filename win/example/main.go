@@ -23,15 +23,12 @@ import (
 	"golang.org/x/mobile/event/size"
 )
 
-var winSize = image.Pt(1920,1080)
-var tagY = 11
+var winSize = image.Pt(1800,1000)
+var tagY = 16
+var fontdy = 16
 
 func p(e mouse.Event) image.Point {
 	return image.Pt(int(e.X), int(e.Y))
-}
-
-func swapcolor(f *frame.Frame){
-	f.Color.Pallete, f.Color.Hi = f.Color.Hi,	f.Color.Pallete
 }
 
 func main() {
@@ -40,14 +37,16 @@ func main() {
 		wind.Send(paint.Event{})
 		focused := false
 		focused = focused
-		pad := image.Pt(15,15)
+		pad := image.Pt(fontdy,fontdy)
 		b, err := src.NewBuffer(winSize)
 		if err != nil {
 			log.Fatalln(err)
 		}
-		draw.Draw(b.RGBA(), b.Bounds(), frame.Acme.Back, image.ZP, draw.Src)
 		wind.Upload(image.ZP, b, b.Bounds())
-		w := win.New(image.ZP, pad, b.RGBA())
+		sp := image.ZP
+		w := win.New(sp, pad, b.RGBA(), frame.NewGoMono(fontdy))
+		wind.Upload(sp, b, b.Bounds())
+		wind.Send(paint.Event{})
 		mousein := NewMouse(time.Second/3, wind)
 
 		go func() {
@@ -61,6 +60,7 @@ func main() {
 				return
 			}
 			w.Insert(data, 0)
+			wind.Send(paint.Event{})
 		}()
 		var q0, q1 int64
 		var but = 0
@@ -82,19 +82,17 @@ _=fmt.Println
 				r := w.Bounds()
 				if int(e.Y) < (r.Min.Y+pad.Y){
 					reg = 1
-				} else if int(e.Y) > (r.Max.Y+13){
+				} else if int(e.Y) > (r.Max.Y-pad.Y){
 					reg = -1
 				} else {
 					reg = 0
 				}
 				if reg != 0 {
-						//swapcolor(w.Frame)
 						if e.Y < float32(pad.Y) {
-							w.FrameScroll(-1+((int(e.Y)-pad.Y)/13))
+							w.FrameScroll(-1+(int(e.Y)/fontdy)*5)
 						} else {
-							w.FrameScroll(1+((int(e.Y)-r.Max.Y)/13))
+							w.FrameScroll(1+((int(e.Y)-r.Max.Y)/fontdy)*5)
 						}
-						//swapcolor(w.Frame)
 						wind.SendFirst(Drain{})
 						wind.Send(DrainStop{})
 				} 
@@ -116,13 +114,12 @@ _=fmt.Println
 						w.Select(q, s); q0=q
 					}
 				}
-			
 				if w.Dirty() {
 					wind.Send(paint.Event{})
 				}
 			case mouse.Event:
-				e.X -= float32(pad.X)
-				e.Y -= float32(pad.Y)
+				e.X -= float32(sp.X)
+				e.Y -= float32(sp.Y)
 				mousein.Sink <- e
 			case key.Event:
 				if e.Direction == 2 {
@@ -155,13 +152,13 @@ _=fmt.Println
 				wind.Send(paint.Event{})
 			case paint.Event:
 				var wg sync.WaitGroup
+				wg.Add(len(w.Cache()))
 				for _, r := range w.Cache() {
-					wg.Add(1)
-					go func(r image.Rectangle){wind.Upload(r.Min.Add(pad), b, r); wg.Done()}(r)
+					go func(r image.Rectangle){wind.Upload(sp.Add(r.Min), b, r); wg.Done()}(r)
 				}
-				wg.Wait()
 				wind.Publish()
 				w.Flush()
+				wg.Wait()
 			case lifecycle.Event:
 				if e.To == lifecycle.StageDead {
 					return

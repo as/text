@@ -58,10 +58,10 @@ type Mouse struct {
 // though. It contains a Skink chan for input mouse events
 // that drive the StateFns
 type Machine struct {
-	r image.Rectangle
-	Sink chan mouse.Event
-	down  mouse.Button
-	first mouse.Event
+	r         image.Rectangle
+	Sink      chan mouse.Event
+	down      mouse.Button
+	first     mouse.Event
 	double    time.Duration
 	lastclick ClickEvent
 	lastsweep mouse.Event
@@ -104,12 +104,14 @@ type ClickEvent struct {
 }
 type SweepEvent struct {
 	mouse.Event
-	Ctr int
+	Ctr   int
 	cross bool
 }
-func (s SweepEvent) Crossed() bool{
+
+func (s SweepEvent) Crossed() bool {
 	return s.cross
 }
+
 type SnarfEvent struct {
 	mouse.Event
 }
@@ -119,15 +121,15 @@ type InsertEvent struct {
 type CommitEvent struct {
 	mouse.Event
 }
-type ScrollEvent struct{
+type ScrollEvent struct {
 	mouse.Event
 	selecting bool
 }
-type ActiveEvent struct{
+type ActiveEvent struct {
 	r image.Rectangle
 }
 
-func (s ScrollEvent) Selecting() bool{
+func (s ScrollEvent) Selecting() bool {
 	return s.selecting
 }
 
@@ -142,7 +144,7 @@ func NewMachine(deque Sender) *Machine {
 	}
 }
 
-func (m *Machine) SetRect(r image.Rectangle){
+func (m *Machine) SetRect(r image.Rectangle) {
 	m.r = r
 }
 func (m *Machine) press(e mouse.Event) bool {
@@ -176,10 +178,10 @@ func (m *Machine) release(e mouse.Event) bool {
 	return true
 }
 func (m *Machine) CloseTo(e, f mouse.Event) bool {
-	return false
-	//return abs(int(e.X-f.X)) < 2 && abs(int(e.Y-f.Y)) < 2
+	//return false
+	return abs(int(e.X-f.X)) < 3 && abs(int(e.Y-f.Y)) < 3
 }
-func (m *Machine) SetBounds(r image.Rectangle){
+func (m *Machine) SetBounds(r image.Rectangle) {
 	m.r = r
 }
 
@@ -223,13 +225,42 @@ func (m *Mouse) Double() bool {
 	return false
 }
 func (m *Machine) Run() chan mouse.Event {
+	seive := make(chan mouse.Event, 100)
+	go func() {
+		ev := <-seive
+		dx, dy := 0, 0
+		for {
+			select {
+			case e := <-seive:
+				if e.Button != 0 || e.Direction != 0 {
+					ev = e
+					m.Sink <- e
+					continue
+				}
+				dx0, dy0 := 1, 1
+				if ev.X < e.X {
+					dy0 = -1
+				}
+				if ev.Y < e.Y {
+					dy0 = -1
+				}
+				if dy0 != dy || dx0 != dx {
+					ev = e
+				}
+				if len(seive) > 10 {
+					continue
+				}
+				m.Sink <- ev
+			}
+		}
+	}()
 	go func() {
 		fn := none
 		for e := range m.Sink {
 			fn = fn(m, e)
 		}
 	}()
-	return m.Sink
+	return seive
 }
 func none(m *Machine, e mouse.Event) StateFn {
 	if m.press(e) {
@@ -264,10 +295,12 @@ func selecting(m *Machine, e mouse.Event) StateFn {
 	return none
 }
 
-var clock60 = time.NewTicker(time.Millisecond*20).C
+var clock60 = time.NewTicker(time.Millisecond * 20).C
+
+//var clock60 = time.NewTicker(time.Millisecond*20).C
 
 func sweeping(m *Machine, e mouse.Event) StateFn {
-	for{
+	for {
 		if m.terminates(e) {
 			switch {
 			case m.CloseTo(e, m.first):
@@ -291,16 +324,16 @@ func sweeping(m *Machine, e mouse.Event) StateFn {
 				return inserting(m, e)
 			}
 		}
-		select{
+		select {
 		case e0 := <-m.Sink:
 			m.lastsweep = e
-			e=e0
+			e = e0
 		case <-clock60:
 		}
 		e.Button = m.first.Button
 		m.Send(SweepEvent{
-			Event: e, 
-			Ctr: m.ctr,
+			Event: e,
+			Ctr:   m.ctr,
 		})
 		m.ctr++
 		m.lastsweep = e
@@ -349,8 +382,8 @@ func commit(m *Machine, e mouse.Event) StateFn {
 	return none
 }
 
-func abs(a int) int{
-	if a < 0{
+func abs(a int) int {
+	if a < 0 {
 		return -a
 	}
 	return a

@@ -1,21 +1,20 @@
 package text
 
-import(
-)
+import ()
 
-type Buffer interface{
+type Buffer interface {
 	Insert(p []byte, at int64) (n int64)
-	Delete(q0, q1 int64) 
+	Delete(q0, q1 int64)
 	Len() int64
 	Bytes() []byte
 }
 
-type Selector interface{
+type Selector interface {
 	Select(q0, q1 int64)
-	Dot()(q0, q1 int64)
+	Dot() (q0, q1 int64)
 }
 
-func NewBuffer() Buffer{
+func NewBuffer() Buffer {
 	return &buf{
 		R: make([]byte, 0, 64*1024),
 	}
@@ -26,7 +25,7 @@ type buf struct {
 	R      []byte
 }
 
-func (w *buf) Len() int64{
+func (w *buf) Len() int64 {
 	return int64(len(w.R))
 }
 
@@ -54,7 +53,7 @@ func (w *buf) Insert(s []byte, q0 int64) int64 {
 	return int64(len(s))
 }
 
-func (w *buf) Delete(q0, q1 int64)  {
+func (w *buf) Delete(q0, q1 int64) {
 	n := q1 - q0
 	if n == 0 {
 		return
