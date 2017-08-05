@@ -4,49 +4,6 @@ import (
 	"fmt"
 	"os"
 )
-
-var (
-	s []byte
-	clients = make(map[string][]int64)
-)
-func insert(p []byte, q0 int64) (n int64){
-	x := append(p, s[q0:]...)
-	s = append(s[:q0], x...)
-	return int64(len(p))
-}
-func delete(q0, q1 int64) (n int64){
-	x := []int64{q0,q1}
-	copy(s[x[0]:], s[x[1]+1:])
-	s=s[:x[1]-x[0]]
-	return q1-q0+1
-}
-func Select(name string, q0,q1 int64){
-	clients[name]=[]int64{q0,q1}
-}
-func print(){
-	fmt.Printf("s=%q len=%d\n", s, len(s))
-	for k,v := range clients{
-		fmt.Printf("client[%q]=%v, %q\n", k, v, s[v[0]:v[1]+1])
-	}
-}
-
-func main() {
-	insert([]byte("The quick brown"),0)
-	Select("a",1,5)
-	Select("b",3,8)
-	Select("c",7,14)
-	print()
-	
-	delete(2,9)
-	CoherenceM(-1, 2,9)
-	print()
-	
-	insert([]byte("e quick "), 2)
-	CoherenceM(1, 2,9)
-	print()
-	
-	os.Exit(0)
-}
 
 // Region3 maps r to 1 of 3 positions relative to q
 //
@@ -106,7 +63,7 @@ func CoherenceM(sign int, r0, r1 int64) {
 				panic("!")
 			}
 			q0,q1 := coDelete(r0,r1, v[0],v[1])
-			Select(k, q0,q1)
+			sel(k, q0,q1)
 		}
 		return
 	}
@@ -118,7 +75,7 @@ func CoherenceM(sign int, r0, r1 int64) {
 				panic("!")
 			}
 			q0,q1 := coInsert(r0,r1, v[0],v[1])
-			Select(k, q0,q1)
+			sel(k, q0,q1)
 		}
 }
 
@@ -164,3 +121,48 @@ func coDelete(r0, r1, q0, q1 int64) (int64, int64){
 	}
 	return q0, q1
 }
+
+
+var (
+	s []byte
+	clients = make(map[string][]int64)
+)
+func insert(p []byte, q0 int64) (n int64){
+	x := append(p, s[q0:]...)
+	s = append(s[:q0], x...)
+	return int64(len(p))
+}
+func delete(q0, q1 int64) (n int64){
+	x := []int64{q0,q1}
+	copy(s[x[0]:], s[x[1]+1:])
+	s=s[:x[1]-x[0]]
+	return q1-q0+1
+}
+func sel(name string, q0,q1 int64){
+	clients[name]=[]int64{q0,q1}
+}
+func print(){
+	fmt.Printf("s=%q len=%d\n", s, len(s))
+	for k,v := range clients{
+		fmt.Printf("client[%q]=%v, %q\n", k, v, s[v[0]:v[1]+1])
+	}
+}
+
+func main() {
+	insert([]byte("The quick brown"),0)
+	sel("a",1,5)
+	sel("b",3,8)
+	sel("c",7,14)
+	print()
+	
+	delete(2,9)
+	CoherenceM(-1, 2,9)
+	print()
+	
+	insert([]byte("e quick "), 2)
+	CoherenceM(1, 2,9)
+	print()
+	
+	os.Exit(0)
+}
+
