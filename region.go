@@ -56,7 +56,7 @@ func Coherence(sign int, r0, r1, q0, q1 int64) (int64, int64){
 }
 
 // CoherenceM runs Coherence over every dot range in the map q
-func CoherenceM(sign int, r0, r1 int64) {
+func CoherenceM(sign int, r0, r1 int64, q map[string][2]int64) {
 	if  sign < 0{
 		for k, v := range clients{
 			if len(v) != 2{
@@ -125,7 +125,7 @@ func coDelete(r0, r1, q0, q1 int64) (int64, int64){
 
 var (
 	s []byte
-	clients = make(map[string][]int64)
+	clients = make(map[string][2]int64)
 )
 func insert(p []byte, q0 int64) (n int64){
 	x := append(p, s[q0:]...)
@@ -139,7 +139,7 @@ func delete(q0, q1 int64) (n int64){
 	return q1-q0+1
 }
 func sel(name string, q0,q1 int64){
-	clients[name]=[]int64{q0,q1}
+	clients[name]=[2]int64{q0,q1}
 }
 func print(){
 	fmt.Printf("s=%q len=%d\n", s, len(s))
@@ -148,7 +148,7 @@ func print(){
 	}
 }
 
-func main() {
+func test() {
 	insert([]byte("The quick brown"),0)
 	sel("a",1,5)
 	sel("b",3,8)
@@ -156,11 +156,11 @@ func main() {
 	print()
 	
 	delete(2,9)
-	CoherenceM(-1, 2,9)
+	CoherenceM(-1, 2,9, clients)
 	print()
 	
 	insert([]byte("e quick "), 2)
-	CoherenceM(1, 2,9)
+	CoherenceM(1, 2,9, clients)
 	print()
 	
 	os.Exit(0)
