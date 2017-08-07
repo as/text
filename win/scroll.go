@@ -4,7 +4,7 @@ import (
 	"image"
 )
 
-func (w *Win) FrameScroll(dl int) {
+func (w *Win) Scroll(dl int) {
 	if dl == 0 {
 		return
 	}
@@ -43,29 +43,11 @@ func (w *Win) BackNL(p int64, n int) int64 {
 	return p
 }
 
-func (w *Win) FrameWin(dl int) {
-	if dl == 0 {
-		return
-	}
-	org := w.org
-	if dl < 0 {
-		org = w.BackNL(org, -dl)
-		w.SetOrigin(org, false)
-	} else {
-		if org+w.Frame.Nchars == w.Len() {
-			return
-		}
-		r := w.Frame.Bounds()
-		org += w.IndexOf(image.Pt(r.Min.X, r.Min.Y+dl*w.Font.Dy()))
-		w.SetOrigin(org, false)
-	}
-}
-
 func (w *Win) Fill() {
 	for !w.Frame.Full() {
 		qep := w.org + w.Nchars
 		n := min(w.Len()-qep, 2500)
-		if n == 0 {
+		if n <= 0 {
 			break
 		}
 		rp := w.Bytes()[qep : qep+n]
