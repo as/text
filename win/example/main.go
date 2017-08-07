@@ -21,6 +21,9 @@ import (
 	"golang.org/x/mobile/event/mouse"
 	"golang.org/x/mobile/event/paint"
 	"golang.org/x/mobile/event/size"
+
+	mous "github.com/as/text/mouse"
+	kbd  "github.com/as/text/kbd"
 )
 
 var winSize = image.Pt(1800,1000)
@@ -47,7 +50,7 @@ func main() {
 		w := win.New(sp, pad, b.RGBA(), frame.NewGoMono(fontdy))
 		wind.Upload(sp, b, b.Bounds())
 		wind.Send(paint.Event{})
-		mousein := NewMouse(time.Second/3, wind)
+		mousein := mous.NewMouse(time.Second/3, wind)
 
 		go func() {
 			file := `\windows\system32\drivers\etc\hosts`
@@ -62,76 +65,64 @@ func main() {
 			w.Insert(data, 0)
 			wind.Send(paint.Event{})
 		}()
-		var q0, q1 int64
+		var q0, q1, s int64
 		var but = 0
-		var reg = 0
 		r := w.Bounds()
 		mousein.Machine.SetRect(image.Rect(r.Min.X, r.Min.Y+pad.Y, r.Max.X, r.Max.Y-pad.Y))
 _=fmt.Println
-		s := int64(0)
 		for {
 			switch e := wind.NextEvent().(type) {
-			case Drain:
-				DrainLoop:
-				for{
-				switch wind.NextEvent().(type){
-				case DrainStop:
-					break DrainLoop
-				}}
-			case SweepEvent:
-				r := w.Bounds()
-				if int(e.Y) < (r.Min.Y+pad.Y){
-					reg = 1
-				} else if int(e.Y) > (r.Max.Y-pad.Y){
-					reg = -1
-				} else {
-					reg = 0
-				}
-				if reg != 0 {
-						if e.Y < float32(pad.Y) {
-							w.FrameScroll(-1+(int(e.Y)/fontdy)*5)
-						} else {
-							w.FrameScroll(1+((int(e.Y)-r.Max.Y)/fontdy)*5)
-						}
-						wind.SendFirst(Drain{})
-						wind.Send(DrainStop{})
-				} 
-				q := w.Origin()+w.IndexOf(p(e.Event))
-				if s == q0{
-					if q < q0{
-						q1 = q0
-						s = q0
-						w.Select(q, s); q0=q
-					} else {
-						w.Select(s, q); q1=q
-					}
-				} else {
-					if q > q1{
-						q0 = q1
-						s = q1
-						w.Select(s, q); q1=q
-					} else {
-						w.Select(q, s); q0=q
-					}
-				}
-				if w.Dirty() {
-					wind.Send(paint.Event{})
-				}
 			case mouse.Event:
 				e.X -= float32(sp.X)
 				e.Y -= float32(sp.Y)
 				mousein.Sink <- e
+			case mous.Drain:
+				DrainLoop:
+				for{
+				switch wind.NextEvent().(type){
+				case mous.DrainStop:
+					break DrainLoop
+				}}
+			case mous.SweepEvent:
+				s,q0,q1= mous.Sweep(w, e, pad.Y,s,q0,q1, wind)
+				if w.Dirty() {
+					wind.Send(paint.Event{})
+				}
+			case mous.MarkEvent:
+				q0 = w.Origin()+w.IndexOf(p(e.Event))
+				q1 = q0
+				s = q0
+				but = int(e.Button)
+				w.Select(q0,q1)
+				if w.Dirty() {
+					wind.Send(paint.Event{})
+				}
+			case mous.ClickEvent, mous.SelectEvent:
+				if q0 > q1 {
+					q0, q1 = q1, q0
+				}
+but=but
+				//w.Select2(but, q0, q1)
+				w.Select(q0, q1)
+				if w.Dirty() {
+					wind.Send(paint.Event{})
+				}
 			case key.Event:
 				if e.Direction == 2 {
 					continue
 				}
+kbd.Send(w, e)
+if w.Dirty(){
+	wind.Send(paint.Event{})
+}
+continue
 				if e.Rune == '\r' {
 					e.Rune = '\n'
 				}
 				if e.Code == key.CodeUpArrow {
-					w.FrameScroll(-3)
+					w.Scroll(-3)
 				} else if e.Code == key.CodeDownArrow{
-					w.FrameScroll(3)
+					w.Scroll(3)
 				} else {
 				q0, _ := w.Dot()
 				w.Insert([]byte{byte(e.Rune)}, q0)
@@ -168,21 +159,6 @@ _=fmt.Println
 					focused = false
 				} else if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOn {
 					focused = true
-				}
-			case MarkEvent:
-				q0 = w.Origin()+w.IndexOf(p(e.Event))
-				q1 = q0
-				s = q0
-				but = int(e.Button)
-			case ClickEvent, SelectEvent:
-				if q0 > q1 {
-					q0, q1 = q1, q0
-				}
-but=but
-				//w.Select2(but, q0, q1)
-				w.Select(q0, q1)
-				if w.Dirty() {
-					wind.Send(paint.Event{})
 				}
 			}
 		}

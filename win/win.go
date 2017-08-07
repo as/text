@@ -24,10 +24,6 @@ type Client struct {
 	pal    frame.Color
 }
 
-func (w *Win) Bounds() image.Rectangle {
-	return image.Rectangle{w.sp, w.sp.Add(w.size)}
-}
-
 func (c *Client) Dot() (q0, q1 int64) {
 	return c.q0, c.q1
 }
@@ -38,6 +34,10 @@ func (c *Client) Select(p0, p1 int64) {
 func (c *Client) Colors() frame.Color {
 	return c.pal
 }
+func (w *Win) Bounds() image.Rectangle {
+	return image.Rectangle{w.sp, w.sp.Add(w.size)}
+}
+
 func New(sp, pad image.Point, b *image.RGBA, ft frame.Font) *Win {
 	r := b.Bounds()
 	r.Min.X += pad.X
@@ -89,7 +89,7 @@ func (w *Win) Len() int64 {
 }
 
 // Insertion extends selection
-func (w *Win) Insert(p []byte, at int64) (n int64) {
+func (w *Win) Insert(p []byte, at int64) (n int) {
 	w.Frame.Insert(p, at)
 	n = w.buf.Insert(p, at)
 	if n > 0 {
@@ -98,6 +98,7 @@ func (w *Win) Insert(p []byte, at int64) (n int64) {
 	return n
 }
 
+/*
 func (w *Win) Select2(id int, p0, p1 int64) {
 	if id >= len(w.Clients) {
 		return
@@ -129,6 +130,7 @@ func (w *Win) Select2(id int, p0, p1 int64) {
 	w.sel(pp0, pp1, p0, p1, col)
 	w.Clients[id].Select(p0, p1)
 }
+*/
 
 func (w *Win) sel(pp0, pp1, p0, p1 int64, col frame.Color) {
 	if pp1 <= p0 || p1 <= pp0 || p0 == p1 || pp1 == pp0 {

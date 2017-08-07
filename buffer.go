@@ -3,8 +3,8 @@ package text
 import ()
 
 type Buffer interface {
-	Insert(p []byte, at int64) (n int64)
-	Delete(q0, q1 int64)
+	Insert(p []byte, at int64) (n int)
+	Delete(q0, q1 int64)(n int)
 	Len() int64
 	Bytes() []byte
 }
@@ -33,8 +33,8 @@ func (w *buf) Select(q0, q1 int64) {
 	w.Q0, w.Q1 = q0, q1
 }
 
-func (w *buf) Insert(s []byte, q0 int64) int64 {
-	n := int64(len(s))
+func (w *buf) Insert(s []byte, q0 int64) int {
+	n := len(s)
 	if n == 0 {
 		return 0
 	}
@@ -50,19 +50,19 @@ func (w *buf) Insert(s []byte, q0 int64) int64 {
 		w.R = []byte{}
 	}
 	w.R = append(w.R[:q0], append(s, back...)...)
-	return int64(len(s))
+	return len(s)
 }
 
-func (w *buf) Delete(q0, q1 int64) {
+func (w *buf) Delete(q0, q1 int64) int {
 	n := q1 - q0
 	if n == 0 {
-		return
+		return 0
 	}
 
 	Nr := int64(len(w.R))
 	copy(w.R[q0:], w.R[q1:][:Nr-q1])
 	w.R = w.R[:Nr-n]
-	return
+	return int(n+1)
 }
 
 func (w *buf) Dot() (q0, q1 int64) {
