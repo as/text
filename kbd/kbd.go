@@ -6,13 +6,13 @@ import (
 	"golang.org/x/mobile/event/key"
 )
 
-func setFont(ed text.Editor, size int){
-	type Framer interface{
+func setFont(ed text.Editor, size int) {
+	type Framer interface {
 		Dy() int
 		SetFont(frame.Font)
 		TTF() []byte
 	}
-	switch fr := ed.(type){
+	switch fr := ed.(type) {
 	case Framer:
 		fsize := 5 * fr.Dy() / 6
 		fr.SetFont(frame.NewTTF(fr.TTF(), fsize))
@@ -37,7 +37,7 @@ func Send(ed text.Win, e key.Event) {
 			df := 2
 			if key.CodeHyphenMinus == e.Code {
 				df = -2
-			} 
+			}
 			setFont(ed, df)
 			return
 		}

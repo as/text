@@ -63,7 +63,7 @@ func (w *Scroll) Fill() {
 		if n == 0 {
 			break
 		}
-		rp := w.Bytes()[qep:qep+n]
+		rp := w.Bytes()[qep : qep+n]
 		nl := w.MaxLine() - w.Line()
 		m := 0
 		i := int64(0)
@@ -82,11 +82,11 @@ func (w *Scroll) Fill() {
 	}
 }
 
-func (w *Scroll) Dot() (q0, q1 int64){
-	p0,p1 := w.Win.Dot()
-	return p0+w.org, p1+w.org
+func (w *Scroll) Dot() (q0, q1 int64) {
+	p0, p1 := w.Win.Dot()
+	return p0 + w.org, p1 + w.org
 }
-	
+
 func (w *Scroll) SetOrigin(org int64, exact bool) {
 	org = clamp(org, 0, w.Len())
 	if org == w.org {
@@ -123,24 +123,23 @@ func (w *Scroll) SetOrigin(org int64, exact bool) {
 	}
 	w.Fill()
 	w.org = org
-	
+
 	//w.drawsb()
 	q0, q1 := w.Dot()
 	w.Select(q0, q1)
 	if P0, P1 := w.Frame.Dot(); fix && P1 > P0 {
 		w.Redraw(w.PointOf(P1-1), P1-1, P1, true)
 	}
-//	if q0 < w.org && q1 < w.org {
-//		p0, p1 := w.Frame.Dot()
-//		w.Redraw(w.PointOf(p0), p0, p1, false)
-//	}
+	//	if q0 < w.org && q1 < w.org {
+	//		p0, p1 := w.Frame.Dot()
+	//		w.Redraw(w.PointOf(p0), p0, p1, false)
+	//	}
 }
 
 func (w *Scroll) Select(q0, q1 int64) {
-	p0, p1 := q0-w.org,q1-w.org
+	p0, p1 := q0-w.org, q1-w.org
 	w.Win.Select(p0, p1)
 }
-
 
 func min(a, b int64) int64 {
 	if a < b {

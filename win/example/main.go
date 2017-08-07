@@ -4,13 +4,6 @@ import (
 
 	//	"github.com/as/clip"
 	//
-	"image"
-	"image/draw"
-	"io/ioutil"
-	"log"
-	"os"
-	"time"
-	"sync"
 	"fmt"
 	"github.com/as/frame"
 	"github.com/as/text/win"
@@ -21,12 +14,19 @@ import (
 	"golang.org/x/mobile/event/mouse"
 	"golang.org/x/mobile/event/paint"
 	"golang.org/x/mobile/event/size"
+	"image"
+	"image/draw"
+	"io/ioutil"
+	"log"
+	"os"
+	"sync"
+	"time"
 
+	kbd "github.com/as/text/kbd"
 	mous "github.com/as/text/mouse"
-	kbd  "github.com/as/text/kbd"
 )
 
-var winSize = image.Pt(1800,1000)
+var winSize = image.Pt(1800, 1000)
 var tagY = 16
 var fontdy = 16
 
@@ -40,7 +40,7 @@ func main() {
 		wind.Send(paint.Event{})
 		focused := false
 		focused = focused
-		pad := image.Pt(fontdy,fontdy)
+		pad := image.Pt(fontdy, fontdy)
 		b, err := src.NewBuffer(winSize)
 		if err != nil {
 			log.Fatalln(err)
@@ -69,7 +69,7 @@ func main() {
 		var but = 0
 		r := w.Bounds()
 		mousein.Machine.SetRect(image.Rect(r.Min.X, r.Min.Y+pad.Y, r.Max.X, r.Max.Y-pad.Y))
-_=fmt.Println
+		_ = fmt.Println
 		for {
 			switch e := wind.NextEvent().(type) {
 			case mouse.Event:
@@ -77,23 +77,24 @@ _=fmt.Println
 				e.Y -= float32(sp.Y)
 				mousein.Sink <- e
 			case mous.Drain:
-				DrainLoop:
-				for{
-				switch wind.NextEvent().(type){
-				case mous.DrainStop:
-					break DrainLoop
-				}}
+			DrainLoop:
+				for {
+					switch wind.NextEvent().(type) {
+					case mous.DrainStop:
+						break DrainLoop
+					}
+				}
 			case mous.SweepEvent:
-				s,q0,q1= mous.Sweep(w, e, pad.Y,s,q0,q1, wind)
+				s, q0, q1 = mous.Sweep(w, e, pad.Y, s, q0, q1, wind)
 				if w.Dirty() {
 					wind.Send(paint.Event{})
 				}
 			case mous.MarkEvent:
-				q0 = w.Origin()+w.IndexOf(p(e.Event))
+				q0 = w.Origin() + w.IndexOf(p(e.Event))
 				q1 = q0
 				s = q0
 				but = int(e.Button)
-				w.Select(q0,q1)
+				w.Select(q0, q1)
 				if w.Dirty() {
 					wind.Send(paint.Event{})
 				}
@@ -101,7 +102,7 @@ _=fmt.Println
 				if q0 > q1 {
 					q0, q1 = q1, q0
 				}
-but=but
+				but = but
 				//w.Select2(but, q0, q1)
 				w.Select(q0, q1)
 				if w.Dirty() {
@@ -111,23 +112,24 @@ but=but
 				if e.Direction == 2 {
 					continue
 				}
-kbd.Send(w, e)
-if w.Dirty(){
-	wind.Send(paint.Event{})
-}
-continue
+				kbd.Send(w, e)
+				if w.Dirty() {
+					wind.Send(paint.Event{})
+				}
+				continue
 				if e.Rune == '\r' {
 					e.Rune = '\n'
 				}
 				if e.Code == key.CodeUpArrow {
 					w.Scroll(-3)
-				} else if e.Code == key.CodeDownArrow{
+				} else if e.Code == key.CodeDownArrow {
 					w.Scroll(3)
 				} else {
-				q0, _ := w.Dot()
-				w.Insert([]byte{byte(e.Rune)}, q0)
-				q0++
-				w.Select(q0, q0)
+					q0, _ := w.Dot()
+					w.Insert([]byte{byte(e.Rune)}, q0)
+					q0++
+					q1 = q0
+					w.Select(q0, q1)
 				}
 				if w.Dirty() {
 					wind.Send(paint.Event{})
@@ -145,7 +147,7 @@ continue
 				var wg sync.WaitGroup
 				wg.Add(len(w.Cache()))
 				for _, r := range w.Cache() {
-					go func(r image.Rectangle){wind.Upload(sp.Add(r.Min), b, r); wg.Done()}(r)
+					go func(r image.Rectangle) { wind.Upload(sp.Add(r.Min), b, r); wg.Done() }(r)
 				}
 				wind.Publish()
 				w.Flush()
@@ -164,7 +166,6 @@ continue
 		}
 	})
 }
-
 
 func region(c, p0, p1 int64) int {
 	if c < p0 {

@@ -5,6 +5,7 @@ import (
 	"github.com/as/text"
 	"image"
 	"image/color"
+	//"fmt"
 	"image/draw"
 )
 
@@ -52,7 +53,7 @@ func New(sp, pad image.Point, b *image.RGBA, ft frame.Font) *Win {
 		buf:     text.NewBuffer(),
 		Clients: []*Client{new(Client), new(Client), new(Client), new(Client)},
 	}
-	draw.Draw(b, b.Bounds(), fr.Color.Pallete.Back, image.ZP, draw.Src)
+	draw.Draw(b, b.Bounds(), fr.Color.Palette.Back, image.ZP, draw.Src)
 	w.Clients[1].pal = frame.Acme
 	w.Clients[2].pal = frame.Acme
 	w.Clients[3].pal = frame.Acme
@@ -90,11 +91,15 @@ func (w *Win) Len() int64 {
 
 // Insertion extends selection
 func (w *Win) Insert(p []byte, at int64) (n int) {
-	w.Frame.Insert(p, at)
-	n = w.buf.Insert(p, at)
-	if n > 0 {
-		w.dirty = true
+	if len(p) == 0 {
+		return 0
 	}
+	//	if at <= w.org+w.Nchars && !w.Full(){
+	w.Frame.Insert(p, at-w.org)
+	w.dirty = true
+	//	}
+	n = w.buf.Insert(p, at)
+	//w.dirty = true
 	return n
 }
 
@@ -134,18 +139,18 @@ func (w *Win) Select2(id int, p0, p1 int64) {
 
 func (w *Win) sel(pp0, pp1, p0, p1 int64, col frame.Color) {
 	if pp1 <= p0 || p1 <= pp0 || p0 == p1 || pp1 == pp0 {
-		w.Recolor(w.PointOf(pp0), pp0, pp1, col.Pallete)
+		w.Recolor(w.PointOf(pp0), pp0, pp1, col.Palette)
 		w.Recolor(w.PointOf(p0), p0, p1, col.Hi)
 	} else {
 		if p0 < pp0 {
 			w.Recolor(w.PointOf(p0), p0, pp0, col.Hi)
 		} else if p0 > pp0 {
-			w.Recolor(w.PointOf(pp0), pp0, p0, col.Pallete)
+			w.Recolor(w.PointOf(pp0), pp0, p0, col.Palette)
 		}
 		if pp1 < p1 {
 			w.Recolor(w.PointOf(pp1), pp1, p1, col.Hi)
 		} else if pp1 > p1 {
-			w.Recolor(w.PointOf(p1), p1, pp1, col.Pallete)
+			w.Recolor(w.PointOf(p1), p1, pp1, col.Palette)
 		}
 	}
 }
@@ -174,10 +179,12 @@ func (w *Win) Origin() int64 {
 }
 
 func (w *Win) Dot() (q0, q1 int64) {
+	//fmt.Printf("Dot: %d:%d\n",w.q0, w.q1)
 	return w.q0, w.q1
 }
 
 func (w *Win) Select(q0, q1 int64) {
+	//fmt.Printf("Select: %d:%d\n",q0,q1)
 	w.dirty = true
 	w.q0, w.q1 = q0, q1
 	p0, p1 := q0-w.org, q1-w.org
