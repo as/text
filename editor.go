@@ -4,7 +4,7 @@ import (
 	"image"
 )
 
-type Sender interface{
+type Sender interface {
 	Send(interface{})
 	SendFirst(interface{})
 }
@@ -30,7 +30,7 @@ type Editor interface {
 	Selector
 }
 
-type Sweeper interface{
+type Sweeper interface {
 	Bounds() image.Rectangle
 	Projector
 	Scroller

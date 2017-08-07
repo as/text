@@ -4,7 +4,7 @@ import ()
 
 type Buffer interface {
 	Insert(p []byte, at int64) (n int)
-	Delete(q0, q1 int64)(n int)
+	Delete(q0, q1 int64) (n int)
 	Len() int64
 	Bytes() []byte
 }
@@ -62,7 +62,7 @@ func (w *buf) Delete(q0, q1 int64) int {
 	Nr := int64(len(w.R))
 	copy(w.R[q0:], w.R[q1:][:Nr-q1])
 	w.R = w.R[:Nr-n]
-	return int(n+1)
+	return int(n + 1)
 }
 
 func (w *buf) Dot() (q0, q1 int64) {
