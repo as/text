@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+
 type Mouse struct {
 	Chord Chord
 	Last  []Click
@@ -59,13 +60,13 @@ func yRegion(y, ymin, ymax int) int {
 func Sweep(w text.Sweeper, e SweepEvent, padY int, s, q0, q1 int64, drain text.Sender) (int64, int64, int64) {
 	r := w.Bounds()
 	y := int(e.Y)
-	reg := yRegion(y, r.Min.Y+padY, r.Max.Y-padY)
 	units := 1
 	if t, ok := w.(interface {
 		Dy() int
 	}); ok {
 		units = t.Dy()
 	}
+	reg := yRegion(y, r.Min.Y+padY, r.Max.Y-padY)
 	if reg != 0 {
 		if reg == 1 {
 			w.Scroll(-1 + (y/units)*5)
@@ -103,10 +104,6 @@ func Sweep(w text.Sweeper, e SweepEvent, padY int, s, q0, q1 int64, drain text.S
 	}
 	return s, q0, q1
 }
-
-type Drain struct{}
-type DrainStop struct{}
-
 func (m *Mouse) Process(e mouse.Event) {
 	m.Sink <- e
 	return

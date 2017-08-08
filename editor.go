@@ -4,9 +4,26 @@ import (
 	"image"
 )
 
-type Sender interface {
-	Send(interface{})
-	SendFirst(interface{})
+type Buffer interface {
+	Insert(p []byte, at int64) (n int)
+	Delete(q0, q1 int64) (n int)
+	Len() int64
+	Bytes() []byte
+}
+
+type Selector interface {
+	Select(q0, q1 int64)
+	Dot() (q0, q1 int64)
+}
+
+type Editor interface {
+	Buffer
+	Selector
+}
+
+type Plane interface {
+	Bounds() image.Rectangle
+	Size() image.Point
 }
 
 type Projector interface {
@@ -18,6 +35,21 @@ type Ruler interface {
 	Measure(s string) int
 	Height() int
 }
+
+type Win interface {
+	Editor
+	Scroller
+	Plane
+	Mark()
+}
+
+type Sweeper interface {
+	Plane
+	Projector
+	Scroller
+	Selector
+}
+
 type Scroller interface {
 	Origin() int64
 	SetOrigin(int64, bool)
@@ -25,26 +57,20 @@ type Scroller interface {
 	Scroll(int)
 }
 
-type Editor interface {
-	Buffer
-	Selector
+type Inverse struct {
+	e interface{}
 }
 
-type Sweeper interface {
-	Bounds() image.Rectangle
-	Projector
-	Scroller
-	Selector
+type History interface {
+	Next() interface{}
+	Prev() interface{}
+	Event() interface{}
+	Add(e interface{})
+	Commit()
+	Apply()
 }
 
-type Plane interface {
-	Bounds() image.Rectangle
-	Size() image.Point
-}
-
-type Win interface {
-	Editor
-	Scroller
-	Plane
-	Mark()
+type Sender interface {
+	Send(interface{})
+	SendFirst(interface{})
 }

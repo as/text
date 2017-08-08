@@ -1,19 +1,5 @@
 package text
 
-import ()
-
-type Buffer interface {
-	Insert(p []byte, at int64) (n int)
-	Delete(q0, q1 int64) (n int)
-	Len() int64
-	Bytes() []byte
-}
-
-type Selector interface {
-	Select(q0, q1 int64)
-	Dot() (q0, q1 int64)
-}
-
 func NewBuffer() Buffer {
 	return &buf{
 		R: make([]byte, 0, 64*1024),
@@ -66,7 +52,7 @@ func (w *buf) Delete(q0, q1 int64) int {
 }
 
 func (w *buf) Dot() (q0, q1 int64) {
-	nr := int64(len(w.R))
+	nr := int64(w.Len())
 	q0 = clamp(w.Q0, 0, nr)
 	q1 = clamp(w.Q1, 0, nr)
 	return
@@ -78,14 +64,4 @@ func (w *buf) Dirty() bool {
 
 func (w *buf) Bytes() []byte {
 	return w.R
-}
-
-func clamp(v, l, h int64) int64 {
-	if v < l {
-		return l
-	}
-	if v > h {
-		return h
-	}
-	return v
 }

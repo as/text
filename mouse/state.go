@@ -47,6 +47,9 @@ type SweepEvent struct {
 	last  mouse.Event
 }
 
+type Drain struct{}
+type DrainStop struct{}
+
 func (s SweepEvent) Motion() bool {
 	return int(s.last.X) != int(s.X) || int(s.last.Y) != int(s.Y)
 }

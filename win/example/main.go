@@ -99,9 +99,6 @@ func main() {
 					wind.Send(paint.Event{})
 				}
 			case mous.ClickEvent, mous.SelectEvent:
-				if q0 > q1 {
-					q0, q1 = q1, q0
-				}
 				but = but
 				//w.Select2(but, q0, q1)
 				w.Select(q0, q1)
@@ -113,24 +110,6 @@ func main() {
 					continue
 				}
 				kbd.Send(w, e)
-				if w.Dirty() {
-					wind.Send(paint.Event{})
-				}
-				continue
-				if e.Rune == '\r' {
-					e.Rune = '\n'
-				}
-				if e.Code == key.CodeUpArrow {
-					w.Scroll(-3)
-				} else if e.Code == key.CodeDownArrow {
-					w.Scroll(3)
-				} else {
-					q0, _ := w.Dot()
-					w.Insert([]byte{byte(e.Rune)}, q0)
-					q0++
-					q1 = q0
-					w.Select(q0, q1)
-				}
 				if w.Dirty() {
 					wind.Send(paint.Event{})
 				}
