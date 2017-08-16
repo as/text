@@ -21,6 +21,11 @@ type Editor interface {
 	Selector
 }
 
+type Dirt interface{
+	Mark()
+	Dirty() bool
+}
+
 type Plane interface {
 	Bounds() image.Rectangle
 	Size() image.Point

@@ -19,8 +19,16 @@ func setFont(ed text.Editor, size int) {
 	}
 }
 
+// markDirt calls Mark if the editor implements
+// the text.Dirt interface
+func markDirt(ed text.Editor){
+	if ed, ok := ed.(text.Dirt); ok{
+		ed.Mark()
+	}
+}
+
 // Send process a keyboard event with the editor
-func Send(ed text.Win, e key.Event) {
+func Send(ed text.Editor, e key.Event) {
 	if e.Direction == key.DirRelease {
 		return
 	}
@@ -42,15 +50,17 @@ func Send(ed text.Win, e key.Event) {
 			return
 		}
 	case key.CodeUpArrow, key.CodePageUp, key.CodeDownArrow, key.CodePageDown:
-		n := 1
-		if e.Code == key.CodePageUp || e.Code == key.CodePageDown {
-			n *= 10
+		if ed, ok := ed.(text.Scroller); ok{
+			n := 1
+				if e.Code == key.CodePageUp || e.Code == key.CodePageDown {
+				n *= 10
+			}
+			if e.Code == key.CodeUpArrow || e.Code == key.CodePageUp {
+				n = -n
+			}
+			ed.Scroll(n)
 		}
-		if e.Code == key.CodeUpArrow || e.Code == key.CodePageUp {
-			n = -n
-		}
-		ed.Scroll(n)
-		ed.Mark()
+		markDirt(ed)
 		return
 	case key.CodeLeftArrow, key.CodeRightArrow:
 		if e.Code == key.CodeLeftArrow {
@@ -65,7 +75,7 @@ func Send(ed text.Win, e key.Event) {
 			q1++
 		}
 		ed.Select(q0, q1)
-		ed.Mark()
+		markDirt(ed)
 		return
 	}
 	switch e.Rune {
@@ -106,13 +116,13 @@ func Send(ed text.Win, e key.Event) {
 		default:
 			ed.Delete(q0, q1)
 		}
-		ed.Mark()
+		markDirt(ed)
 		return
 	}
 	ch := []byte(string(e.Rune))
 	if q1 != q0 {
 		ed.Delete(q0, q1)
-		ed.Mark()
+		markDirt(ed)
 		q1 = q0
 	}
 	q1 += int64(ed.Insert(ch, q0))
