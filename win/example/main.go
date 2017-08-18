@@ -5,7 +5,15 @@ import (
 	//	"github.com/as/clip"
 	//
 	"fmt"
-	"github.com/as/frame"
+	"image"
+	"image/draw"
+	"io/ioutil"
+	"log"
+	"os"
+	"sync"
+	"time"
+
+	"github.com/as/frame/font"
 	"github.com/as/text/win"
 	"golang.org/x/exp/shiny/driver"
 	"golang.org/x/exp/shiny/screen"
@@ -14,13 +22,6 @@ import (
 	"golang.org/x/mobile/event/mouse"
 	"golang.org/x/mobile/event/paint"
 	"golang.org/x/mobile/event/size"
-	"image"
-	"image/draw"
-	"io/ioutil"
-	"log"
-	"os"
-	"sync"
-	"time"
 
 	kbd "github.com/as/text/kbd"
 	mous "github.com/as/text/mouse"
@@ -47,7 +48,7 @@ func main() {
 		}
 		wind.Upload(image.ZP, b, b.Bounds())
 		sp := image.ZP
-		w := win.New(sp, pad, b.RGBA(), frame.NewGoMono(fontdy))
+		w := win.New(sp, pad, b.RGBA(), font.NewGoMono(fontdy))
 		wind.Upload(sp, b, b.Bounds())
 		wind.Send(paint.Event{})
 		mousein := mous.NewMouse(time.Second/3, wind)
