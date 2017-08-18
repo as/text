@@ -1,7 +1,7 @@
 package kbd
 
 import (
-	"github.com/as/frame"
+	"github.com/as/frame/font"
 	"github.com/as/text"
 	"golang.org/x/mobile/event/key"
 )
@@ -9,20 +9,20 @@ import (
 func setFont(ed text.Editor, size int) {
 	type Framer interface {
 		Dy() int
-		SetFont(frame.Font)
+		SetFont(*font.Font)
 		TTF() []byte
 	}
 	switch fr := ed.(type) {
 	case Framer:
 		fsize := 5 * fr.Dy() / 6
-		fr.SetFont(frame.NewTTF(fr.TTF(), fsize))
+		fr.SetFont(font.NewTTF(fr.TTF(), fsize))
 	}
 }
 
 // markDirt calls Mark if the editor implements
 // the text.Dirt interface
-func markDirt(ed text.Editor){
-	if ed, ok := ed.(text.Dirt); ok{
+func markDirt(ed text.Editor) {
+	if ed, ok := ed.(text.Dirt); ok {
 		ed.Mark()
 	}
 }
@@ -50,9 +50,9 @@ func Send(ed text.Editor, e key.Event) {
 			return
 		}
 	case key.CodeUpArrow, key.CodePageUp, key.CodeDownArrow, key.CodePageDown:
-		if ed, ok := ed.(text.Scroller); ok{
+		if ed, ok := ed.(text.Scroller); ok {
 			n := 1
-				if e.Code == key.CodePageUp || e.Code == key.CodePageDown {
+			if e.Code == key.CodePageUp || e.Code == key.CodePageDown {
 				n *= 10
 			}
 			if e.Code == key.CodeUpArrow || e.Code == key.CodePageUp {
