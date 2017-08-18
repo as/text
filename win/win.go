@@ -1,10 +1,12 @@
 package win
 
 import (
-	"github.com/as/frame"
-	"github.com/as/text"
 	"image"
 	"image/color"
+
+	"github.com/as/frame"
+	"github.com/as/frame/font"
+	"github.com/as/text"
 	//"fmt"
 	"image/draw"
 )
@@ -39,7 +41,7 @@ func (w *Win) Bounds() image.Rectangle {
 	return image.Rectangle{w.sp, w.sp.Add(w.size)}
 }
 
-func New(sp, pad image.Point, b *image.RGBA, ft frame.Font) *Win {
+func New(sp, pad image.Point, b *image.RGBA, ft *font.Font) *Win {
 	r := b.Bounds()
 	r.Min.X += pad.X
 	r.Min.Y += pad.Y
