@@ -53,7 +53,7 @@ func Send(ed text.Editor, e key.Event) {
 		if ed, ok := ed.(text.Scroller); ok {
 			n := 1
 			if e.Code == key.CodePageUp || e.Code == key.CodePageDown {
-				n *= 10
+				n *= 50
 			}
 			if e.Code == key.CodeUpArrow || e.Code == key.CodePageUp {
 				n = -n

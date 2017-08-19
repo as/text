@@ -16,45 +16,50 @@ func (w *buf) Len() int64 {
 }
 
 func (w *buf) Select(q0, q1 int64) {
+	if q0 < 0{
+		return
+	}
+	if q1 > w.Len(){
+		q1 = w.Len()
+	}
 	w.Q0, w.Q1 = q0, q1
 }
 
-func (w *buf) Insert(s []byte, q0 int64) int {
-	n := len(s)
-	if n == 0 {
+func (w *buf) Insert(s []byte, q0 int64) (n int) {
+	if n = len(s); n == 0 {
 		return 0
 	}
-	nr := int64(len(w.R))
-	if q0 > nr {
-		q0 = nr
+	if q0 >= w.Len() { // Common case: append 
+		w.R = append(w.R, s...)
+		return n
 	}
-	back := []byte{}
-	if q0 < nr-1 {
-		back = w.R[q0:]
+	if q0 < 0{
+		// Let's be precise and annoying
+		// 0 is the real lower bound
+		return 0
 	}
-	if w.R == nil {
-		w.R = []byte{}
-	}
-	w.R = append(w.R[:q0], append(s, back...)...)
-	return len(s)
+
+	// Interpolate
+	w.R = append(w.R[:q0], append(s, w.R[q0:]...)...)
+	return n
 }
 
-func (w *buf) Delete(q0, q1 int64) int {
-	n := q1 - q0
-	if n == 0 {
+func (w *buf) Delete(q0, q1 int64) (n int) {
+	if q1 < q0 || q0 < 0{
 		return 0
 	}
-
-	Nr := int64(len(w.R))
-	copy(w.R[q0:], w.R[q1:][:Nr-q1])
-	w.R = w.R[:Nr-n]
+	if n = int(q1-q0); n == 0 {
+		return 0
+	}
+	nr := w.Len()
+	copy(w.R[q0:], w.R[q1:][:nr-q1])
+	w.R = w.R[:nr-int64(n)]
 	return int(n + 1)
 }
 
 func (w *buf) Dot() (q0, q1 int64) {
-	nr := int64(w.Len())
-	q0 = clamp(w.Q0, 0, nr)
-	q1 = clamp(w.Q1, 0, nr)
+	q0 = w.Q0
+	q1 = w.Q1
 	return
 }
 

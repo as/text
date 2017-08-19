@@ -21,7 +21,7 @@ type Editor interface {
 	Selector
 }
 
-type Dirt interface{
+type Dirt interface {
 	Mark()
 	Dirty() bool
 }

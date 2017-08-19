@@ -8,7 +8,6 @@ import (
 	"time"
 )
 
-
 type Mouse struct {
 	Chord Chord
 	Last  []Click
