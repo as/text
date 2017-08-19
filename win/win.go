@@ -14,29 +14,20 @@ import (
 type Win struct {
 	sp, pad, size image.Point
 	*frame.Frame
-	buf     text.Buffer
+	text.Editor
 	dirty   bool
-	q0, q1  int64
 	org     int64
-	Clients []*Client
+	Scrollr   image.Rectangle
+	bar image.Rectangle
+
+}
+func (w *Win) Dot() (int64,int64){
+	return w.Editor.Dot()
+}
+func (w *Win) Len() int64{
+	return w.Editor.Len()
 }
 
-type Client struct {
-	q0, q1 int64
-	org    int64
-	pal    frame.Color
-}
-
-func (c *Client) Dot() (q0, q1 int64) {
-	return c.q0, c.q1
-}
-func (c *Client) Select(p0, p1 int64) {
-	c.q0 = p0
-	c.q1 = p1
-}
-func (c *Client) Colors() frame.Color {
-	return c.pal
-}
 func (w *Win) Bounds() image.Rectangle {
 	return image.Rectangle{w.sp, w.sp.Add(w.size)}
 }
@@ -47,20 +38,16 @@ func New(sp, pad image.Point, b *image.RGBA, ft *font.Font) *Win {
 	r.Min.Y += pad.Y
 	r.Max.Y -= pad.Y
 	fr := frame.New(r, ft, b, frame.Acme)
+	ed, _ := text.Open(text.NewBuffer())
 	w := &Win{
 		sp:      sp,
 		pad:     pad,
 		size:    b.Bounds().Max,
 		Frame:   fr,
-		buf:     text.NewBuffer(),
-		Clients: []*Client{new(Client), new(Client), new(Client), new(Client)},
+		Editor: ed,
 	}
 	draw.Draw(b, b.Bounds(), fr.Color.Palette.Back, image.ZP, draw.Src)
-	w.Clients[1].pal = frame.Acme
-	w.Clients[2].pal = frame.Acme
-	w.Clients[3].pal = frame.Acme
-	w.Clients[2].pal.Hi.Back = Green
-	w.Clients[3].pal.Hi.Back = Red
+	w.scrollinit(pad)
 	return w
 }
 
@@ -84,60 +71,66 @@ func (w *Win) Dirty() bool {
 	return w.dirty
 }
 
-func (w *Win) Bytes() []byte {
-	return w.buf.Bytes()
-}
-func (w *Win) Len() int64 {
-	return w.buf.Len()
-}
-
 // Insertion extends selection
-func (w *Win) Insert(p []byte, at int64) (n int) {
+func (w *Win) Insert(p []byte, q0 int64) (n int) {
 	if len(p) == 0 {
 		return 0
 	}
-	//	if at <= w.org+w.Nchars && !w.Full(){
-	w.Frame.Insert(p, at-w.org)
+	if len(p) > int(w.Len()){
+		q0 = w.Len()
+	}
+
+	// If at least one point in the region overlaps the
+	// frame's visible area then we alter the frame. Otherwise
+	// there's no point in moving text down, it's just annoying.
+
+	switch q1 := q0+int64(len(p)); text.Region5(q0, q1, w.org, w.org+w.Frame.Len()){
+	case 2, -2:
+		w.org += q1-q0
+	case -1:
+		// Insertion to the left
+		w.Frame.Insert(p[q1-w.org:], 0)
+		w.org += w.org-q0
+	case 0, 1:	
+		w.Frame.Insert(p, q0-w.org)
+	}
+	if w.Editor == nil{
+		panic("nil editor")
+	}
+	n = w.Editor.Insert(p, q0)
 	w.dirty = true
-	//	}
-	n = w.buf.Insert(p, at)
-	//w.dirty = true
 	return n
 }
 
-/*
-func (w *Win) Select2(id int, p0, p1 int64) {
-	if id >= len(w.Clients) {
-		return
+// This is already scroller territory
+
+func (w *Win) Delete(q0, q1 int64) (n int){
+	if w.Len() == 0{
+		return 0
 	}
-	w.dirty = true
-	col := w.Clients[id].Colors()
-	for i, v := range w.Clients {
-		if i == id {
-			continue
-		}
-		c0, c1 := v.Dot()
-		if c0 == c1 {
-			continue
-		}
-		if intersects(c0, c1, p0, p1) {
-			//			fmt.Printf("#%d %d:%d and #%d %d:%d intersects\n", id, p0,p1, i,c0,c1)
-			// left
-			nc0, nc1 := c0, c1
-			if region(p0, c0, c1) == 0 {
-				nc1 = p0
-			} else if region(p1, c0, c1) == 0 {
-				nc0 = p1
-			}
-			w.sel(c0, c1, nc0, nc1, w.Clients[i].Colors())
-			v.Select(nc0, nc1)
-		}
+
+	w.Editor.Delete(q0, q1)	
+
+	switch text.Region5(q0, q1, w.org, w.org+w.Frame.Len()){
+	case -2:
+		// Logically adjust origin to the left (up)
+		w.org -= q1-q0
+	case -1:
+		// Remove the visible text and adjust left
+		w.Frame.Delete(0, q0-w.org)
+		w.org = q0
+		w.Fill()
+	case 0:
+		w.Frame.Delete(q0-w.org, q1-w.org)
+		w.Fill()
+	case 1:
+		w.Frame.Delete(q0-w.org, w.Frame.Len())
+		w.Fill()
+	case 2:
 	}
-	pp0, pp1 := w.Clients[id].Dot()
-	w.sel(pp0, pp1, p0, p1, col)
-	w.Clients[id].Select(p0, p1)
+	return int(q1-q0+1)
 }
-*/
+
 
 func (w *Win) sel(pp0, pp1, p0, p1 int64, col frame.Color) {
 	if pp1 <= p0 || p1 <= pp0 || p0 == p1 || pp1 == pp0 {
@@ -180,15 +173,10 @@ func (w *Win) Origin() int64 {
 	return w.org
 }
 
-func (w *Win) Dot() (q0, q1 int64) {
-	//fmt.Printf("Dot: %d:%d\n",w.q0, w.q1)
-	return w.q0, w.q1
-}
-
 func (w *Win) Select(q0, q1 int64) {
 	//fmt.Printf("Select: %d:%d\n",q0,q1)
 	w.dirty = true
-	w.q0, w.q1 = q0, q1
+	w.Editor.Select(q0, q1)
 	p0, p1 := q0-w.org, q1-w.org
 	pp0, pp1 := w.Frame.Dot()
 	if pp1 <= p0 || p1 <= pp0 || p0 == p1 || pp1 == pp0 {
@@ -207,4 +195,51 @@ func (w *Win) Select(q0, q1 int64) {
 		}
 	}
 	w.Frame.Select(p0, p1)
+}
+
+func (w *Win) BackNL(p int64, n int) int64 {
+	R := w.Bytes()
+	if n == 0 && p > 0 && R[p-1] != '\n' {
+		n = 1
+	}
+	for i := n; i > 0 && p > 0; {
+		i--
+		p--
+		if p == 0 {
+			break
+		}
+		for j := 512; j-1 > 0 && p > 0; p-- {
+			j--
+			if p-1 < 0 || p-1 > w.Len() || R[p-1] == '\n' {
+				break
+			}
+		}
+	}
+	return p
+}
+
+func (w *Win) Fill() {
+	for !w.Frame.Full() {
+		qep := w.org + w.Nchars
+		n := min(w.Len()-qep, 2500)
+		if n <= 0 {
+			break
+		}
+		rp := w.Bytes()[qep : qep+n]
+		nl := w.MaxLine() - w.Line()
+		m := 0
+		i := int64(0)
+		for i < n {
+			if rp[i] == '\n' {
+				m++
+				if m >= nl {
+					i++
+					break
+				}
+			}
+			i++
+		}
+		w.Frame.Insert(rp[:i], w.Nchars)
+		w.Mark()
+	}
 }

@@ -2,7 +2,23 @@ package win
 
 import (
 	"image"
+	"github.com/as/text"
+	"image/color"
+	"image/draw"
 )
+
+const minSbWidth = 10
+
+func (w *Win) scrollinit(pad image.Point) {
+	w.Scrollr = image.ZR
+	if pad.X > minSbWidth+3 {
+		sr := w.Frame.RGBA().Bounds()
+		sr.Max.X = minSbWidth
+		sr.Max.Y = sr.Dy()-pad.Y*2
+		w.Scrollr = sr
+	}
+	w.Frame.Draw(w.Frame.RGBA(), w.realsbr(w.Scrollr), X, image.ZP, draw.Src)
+}
 
 func (w *Win) Scroll(dl int) {
 	if dl == 0 {
@@ -21,54 +37,55 @@ func (w *Win) Scroll(dl int) {
 		w.SetOrigin(org, true)
 	}
 }
-
-func (w *Win) BackNL(p int64, n int) int64 {
-	R := w.Bytes()
-	if n == 0 && p > 0 && R[p-1] != '\n' {
-		n = 1
+func (w *Win) SetOrigin(org int64, exact bool) {
+	org = clamp(org, 0, w.Len())
+	if org == w.org{
+		return
 	}
-	for i := n; i > 0 && p > 0; {
-		i--
-		p--
-		if p == 0 {
-			break
-		}
-		for j := 512; j-1 > 0 && p > 0; p-- {
-			j--
-			if p-1 < 0 || p-1 > w.Len() || R[p-1] == '\n' {
+	w.Mark()
+	if org > 0 && !exact {
+		for i := 0; i < 512 && org < w.Len(); i++ {
+			if w.Bytes()[org] == '\n' {
+				org++
 				break
 			}
+			org++
 		}
 	}
-	return p
+	w.setOrigin(clamp(org, 0, w.Len()))
 }
-
-func (w *Win) Fill() {
-	for !w.Frame.Full() {
-		qep := w.org + w.Nchars
-		n := min(w.Len()-qep, 2500)
-		if n <= 0 {
-			break
-		}
-		rp := w.Bytes()[qep : qep+n]
-		nl := w.MaxLine() - w.Line()
-		m := 0
-		i := int64(0)
-		for i < n {
-			if rp[i] == '\n' {
-				m++
-				if m >= nl {
-					i++
-					break
-				}
-			}
-			i++
-		}
-		w.Frame.Insert(rp[:i], w.Nchars)
-		w.Mark()
+func (w *Win) setOrigin(org int64) {
+	if org == w.org{
+		return
+	}
+	fl := w.Frame.Len()
+	switch text.Region5(org, org+fl, w.org, w.org+fl) {
+	case -1:
+		w.Frame.Insert(w.Bytes()[org:org+(w.org-org)], 0)
+		w.org= org
+	case -2, 2:
+		w.Frame.Delete(0, w.Frame.Len())
+		w.org= org
+		w.Fill()
+	case 1:
+		w.Frame.Delete(0, org-w.org)
+		w.org= org
+		w.Fill()
+	case 0:
+		panic("never happens")
+	}
+	fr := w.Frame.Bounds()
+	if pt := w.PointOf(w.Frame.Len()); pt.Y != fr.Max.Y {
+		w.Paint(pt, fr.Max, w.Frame.Color.Palette.Back)
+	}
+	q0, q1 := w.Dot()
+	w.drawsb()
+	w.Select(q0, q1)
+	if q0 == q1 && text.Region3(q0, w.org, w.org+w.Frame.Len()) != 0{
+		w.Untick()
 	}
 }
-
+/*
 func (w *Win) SetOrigin(org int64, exact bool) {
 	org = clamp(org, 0, w.Len())
 	if org == w.org {
@@ -116,7 +133,7 @@ func (w *Win) SetOrigin(org int64, exact bool) {
 	//		w.Redraw(w.PointOf(p0), p0, p1, false)
 	//	}
 }
-
+*/
 func min(a, b int64) int64 {
 	if a < b {
 		return a
@@ -139,3 +156,62 @@ func clamp(v, l, h int64) int64 {
 	}
 	return v
 }
+
+func (w *Win) Clicksb(pt image.Point, dir int) {
+	var(
+		rat float64
+	)
+	pt.Y -= w.pad.Y
+	fl := float64(w.Frame.Len())
+	n := w.org
+	barY0 := float64(w.bar.Min.Y)
+	barY1 := float64(w.bar.Max.Y)
+	ptY := float64(pt.Y)
+	switch dir {
+	case -1:
+		rat = barY1 / ptY
+		delta := int64(fl * rat)
+		n -= delta
+	case 0:
+		rat = (ptY - barY0) / (barY1-barY0)
+		delta := int64(fl * rat)
+		n += delta
+	case 1:
+		rat = (barY1 / ptY)
+		delta := int64(fl * rat)
+		n += delta
+	}
+	w.SetOrigin(n, false)
+	w.drawsb()
+}
+
+
+func (w *Win) realsbr(r image.Rectangle) image.Rectangle{
+	return r.Add(w.sp).Add(image.Pt(0, w.pad.Y))
+}
+
+func (w *Win) drawsb() {
+	r := w.Scrollr
+	dy := float64(r.Dy())
+	rat0 := float64(w.org) / float64(w.Len())          // % scrolled
+	rat1 := float64(w.org+w.Frame.Len()) / float64(w.Len()) // % covered by screen
+	r.Min.Y = int(dy * rat0)
+	r.Max.Y = int(dy * rat1)
+	if r.Max.Y-r.Min.Y < 3 {
+		r.Max.Y = r.Min.Y + 3
+	}
+	w.Frame.Draw(w.Frame.RGBA(), w.realsbr(w.bar) , X, image.ZP, draw.Src)
+	w.bar = r
+	w.Frame.Draw(w.Frame.RGBA(), w.realsbr(w.bar), LtGray, image.ZP, draw.Src)
+
+}
+
+var (
+	Blue   = image.NewUniform(color.RGBA{0, 192, 192, 255})
+	Cyan   = image.NewUniform(color.RGBA{234, 255, 255, 255})
+	White  = image.NewUniform(color.RGBA{255, 255, 255, 255})
+	Yellow = image.NewUniform(color.RGBA{255, 255, 224, 255})
+	X      = image.NewUniform(color.RGBA{255 - 32, 255 - 32, 224 - 32, 255})
+
+	LtGray = image.NewUniform(color.RGBA{66*2 + 25, 66*2 + 25, 66*2 + 35, 255})
+)
