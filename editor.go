@@ -2,6 +2,7 @@ package text
 
 import (
 	"image"
+	"github.com/as/event"
 )
 
 type Buffer interface {
@@ -73,6 +74,12 @@ type History interface {
 	Add(e interface{})
 	Commit()
 	Apply()
+}
+
+type Logger interface{
+	Write(event.Record) (err error)
+	ReadAt(at int64) (event.Record, error)
+	Len() int64
 }
 
 type Sender interface {

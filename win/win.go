@@ -32,19 +32,28 @@ func (w *Win) Bounds() image.Rectangle {
 	return image.Rectangle{w.sp, w.sp.Add(w.size)}
 }
 
-func New(sp, pad image.Point, b *image.RGBA, ft *font.Font) *Win {
+func (w *Win) SetEditor(ed text.Editor) {
+	w.Editor = ed
+	w.dirty = true
+}
+
+func New(sp, pad image.Point, b *image.RGBA, ed text.Editor, ft *font.Font) *Win {
 	r := b.Bounds()
 	r.Min.X += pad.X
 	r.Min.Y += pad.Y
 	r.Max.Y -= pad.Y
 	fr := frame.New(r, ft, b, frame.Acme)
-	ed, _ := text.Open(text.NewBuffer())
+	size := b.Bounds()
 	w := &Win{
 		sp:      sp,
 		pad:     pad,
-		size:    b.Bounds().Max,
+		size:    image.Pt(size.Dx(),size.Dy()),
 		Frame:   fr,
 		Editor: ed,
+	}
+	if w.Editor == nil{
+		ed, _ := text.Open(text.NewBuffer())
+		w.Editor = ed
 	}
 	draw.Draw(b, b.Bounds(), fr.Color.Palette.Back, image.ZP, draw.Src)
 	w.scrollinit(pad)
@@ -76,29 +85,36 @@ func (w *Win) Insert(p []byte, q0 int64) (n int) {
 	if len(p) == 0 {
 		return 0
 	}
-	if len(p) > int(w.Len()){
-		q0 = w.Len()
-	}
 
 	// If at least one point in the region overlaps the
 	// frame's visible area then we alter the frame. Otherwise
 	// there's no point in moving text down, it's just annoying.
 
-	switch q1 := q0+int64(len(p)); text.Region5(q0, q1, w.org, w.org+w.Frame.Len()){
-	case 2, -2:
+	switch q1 := q0+int64(len(p)); text.Region5(q0, q1, w.org-1, w.org+w.Frame.Len()+1){
+	case -2:
 		w.org += q1-q0
 	case -1:
 		// Insertion to the left
 		w.Frame.Insert(p[q1-w.org:], 0)
-		w.org += w.org-q0
-	case 0, 1:	
-		w.Frame.Insert(p, q0-w.org)
+		w.org += w.org-q0;println(-2)
+		w.dirty = true
+	case 1:
+		w.Frame.Insert(p[q0-w.org:], 0)
+		w.dirty = true
+	case 0:
+		if q0 < w.org{
+			w.Frame.Insert(p[q0-w.org:], 0)
+			w.org += w.org-q0
+		} else {
+			w.Frame.Insert(p, q0-w.org)
+		}
+		w.dirty = true
 	}
 	if w.Editor == nil{
 		panic("nil editor")
 	}
 	n = w.Editor.Insert(p, q0)
-	w.dirty = true
+	
 	return n
 }
 
@@ -108,10 +124,11 @@ func (w *Win) Delete(q0, q1 int64) (n int){
 	if w.Len() == 0{
 		return 0
 	}
+	
 
 	w.Editor.Delete(q0, q1)	
 
-	switch text.Region5(q0, q1, w.org, w.org+w.Frame.Len()){
+	switch text.Region5(q0, q1, w.org-1, w.org+w.Frame.Len()+1){
 	case -2:
 		// Logically adjust origin to the left (up)
 		w.org -= q1-q0
@@ -120,12 +137,15 @@ func (w *Win) Delete(q0, q1 int64) (n int){
 		w.Frame.Delete(0, q0-w.org)
 		w.org = q0
 		w.Fill()
+		w.dirty = true
 	case 0:
 		w.Frame.Delete(q0-w.org, q1-w.org)
 		w.Fill()
+		w.dirty = true
 	case 1:
 		w.Frame.Delete(q0-w.org, w.Frame.Len())
 		w.Fill()
+		w.dirty = true
 	case 2:
 	}
 	return int(q1-q0+1)
@@ -174,7 +194,6 @@ func (w *Win) Origin() int64 {
 }
 
 func (w *Win) Select(q0, q1 int64) {
-	//fmt.Printf("Select: %d:%d\n",q0,q1)
 	w.dirty = true
 	w.Editor.Select(q0, q1)
 	p0, p1 := q0-w.org, q1-w.org
@@ -240,6 +259,6 @@ func (w *Win) Fill() {
 			i++
 		}
 		w.Frame.Insert(rp[:i], w.Nchars)
-		w.Mark()
+		w.dirty = true
 	}
 }

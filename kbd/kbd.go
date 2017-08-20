@@ -28,14 +28,15 @@ func markDirt(ed text.Editor) {
 }
 
 // Send process a keyboard event with the editor
-func Send(ed text.Editor, e key.Event) {
+func SendClient(hc text.Editor, e key.Event) {
+
 	if e.Direction == key.DirRelease {
 		return
 	}
 	if e.Rune == '\r' {
 		e.Rune = '\n'
 	}
-	q0, q1 := ed.Dot()
+	q0, q1 := hc.Dot()
 	switch e.Code {
 	case key.CodeEqualSign, key.CodeHyphenMinus:
 		if e.Direction == key.DirRelease {
@@ -46,21 +47,21 @@ func Send(ed text.Editor, e key.Event) {
 			if key.CodeHyphenMinus == e.Code {
 				df = -2
 			}
-			setFont(ed, df)
+			setFont(hc, df)
 			return
 		}
 	case key.CodeUpArrow, key.CodePageUp, key.CodeDownArrow, key.CodePageDown:
-		if ed, ok := ed.(text.Scroller); ok {
-			n := 1
-			if e.Code == key.CodePageUp || e.Code == key.CodePageDown {
-				n *= 50
-			}
-			if e.Code == key.CodeUpArrow || e.Code == key.CodePageUp {
-				n = -n
-			}
-			ed.Scroll(n)
+		n := 1
+		if e.Code == key.CodePageUp || e.Code == key.CodePageDown {
+			n *= 10
 		}
-		markDirt(ed)
+		if e.Code == key.CodeUpArrow || e.Code == key.CodePageUp {
+			n = -n
+		}
+		if hc, ok := hc.(text.Scroller); ok {
+			hc.Scroll(n)
+		}
+		//		hc.Mark()
 		return
 	case key.CodeLeftArrow, key.CodeRightArrow:
 		if e.Code == key.CodeLeftArrow {
@@ -74,8 +75,8 @@ func Send(ed text.Editor, e key.Event) {
 			}
 			q1++
 		}
-		ed.Select(q0, q1)
-		markDirt(ed)
+		hc.Select(q0, q1)
+		//		hc.Mark()
 		return
 	}
 	switch e.Rune {
@@ -90,42 +91,42 @@ func Send(ed text.Editor, e key.Event) {
 		}
 		switch e.Rune {
 		case '\x15', '\x01': // ^U, ^A
-			p := ed.Bytes()
+			p := hc.Bytes()
 			if q0 < int64(len(p))-1 {
 				q0++
 			}
-			n0, n1 := text.Findlinerev(ed.Bytes(), q0, 0)
+			n0, n1 := text.Findlinerev(hc.Bytes(), q0, 0)
 			if e.Rune == '\x15' {
-				ed.Delete(n0, n1)
+				hc.Delete(n0, n1)
 			}
-			ed.Select(n0, n0)
+			hc.Select(n0, n0)
 		case '\x05': // ^E
-			_, n1 := text.Findline3(ed.Bytes(), q1, 1)
+			_, n1 := text.Findline3(hc.Bytes(), q1, 1)
 			if n1 > 0 {
 				n1--
 			}
-			ed.Select(n1, n1)
+			hc.Select(n1, n1)
 		case '\x17':
-			if text.Isany(ed.Bytes()[q0], text.AlphaNum) {
-				q0 = text.Acceptback(ed.Bytes(), q0, text.AlphaNum)
+			if text.Isany(hc.Bytes()[q0], text.AlphaNum) {
+				q0 = text.Acceptback(hc.Bytes(), q0, text.AlphaNum)
 			}
-			ed.Delete(q0, q1)
-			ed.Select(q0, q0)
+			hc.Delete(q0, q1)
+			//hc.Select(q0-1, q0-1)
 		case '\x08':
 			fallthrough
 		default:
-			ed.Delete(q0, q1)
+			hc.Delete(q0, q1)
 		}
-		markDirt(ed)
+		//		hc.Mark()
 		return
 	}
 	ch := []byte(string(e.Rune))
 	if q1 != q0 {
-		ed.Delete(q0, q1)
-		markDirt(ed)
+		hc.Delete(q0, q1)
+		//		hc.Mark()
 		q1 = q0
 	}
-	q1 += int64(ed.Insert(ch, q0))
+	q1 += int64(hc.Insert(ch, q0))
 	q0 = q1
-	ed.Select(q0, q1)
+	hc.Select(q0, q1)
 }

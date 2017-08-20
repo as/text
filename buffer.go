@@ -29,16 +29,19 @@ func (w *buf) Insert(s []byte, q0 int64) (n int) {
 	if n = len(s); n == 0 {
 		return 0
 	}
-	if q0 >= w.Len() { // Common case: append 
-		w.R = append(w.R, s...)
-		return n
-	}
 	if q0 < 0{
 		// Let's be precise and annoying
 		// 0 is the real lower bound
 		return 0
 	}
-
+	if q0 == 0{
+		w.R = append(s, w.R...) // append(s, w.R[q0:]...)...)
+		return n
+	}
+	if q0 >= w.Len() { // Common case: append 
+		w.R = append(w.R, s...)
+		return n
+	}
 	// Interpolate
 	w.R = append(w.R[:q0], append(s, w.R[q0:]...)...)
 	return n

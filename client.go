@@ -34,14 +34,14 @@ func (c *client) Select(q0, q1 int64) {
 	c.q0, c.q1 = c.clamp(q0, q1)
 }
 func (c *client) Insert(s []byte, q0 int64) (n int) {
-	q0, _ = c.clamp(q0, q0)
 	n = c.Buffer.Insert(s, q0)
+	q0, _ = c.clamp(q0, q0)
 	c.q0, c.q1 = Coherence(1, q0, q0+int64(n), c.q0, c.q1)
 	return n
 }
 func (c *client) Delete(q0, q1 int64) (n int) {
-	q0, q1 = c.clamp(q0, q1)
 	n = c.Buffer.Delete(q0, q1)
+	q0, q1 = c.clamp(q0, q1)
 	c.q0, c.q1 = Coherence(-1, q0, q1, c.q0, c.q1)
 	return n
 }
