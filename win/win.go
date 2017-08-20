@@ -42,7 +42,7 @@ func New(sp, pad image.Point, b *image.RGBA, ed text.Editor, ft *font.Font) *Win
 	r.Min.X += pad.X
 	r.Min.Y += pad.Y
 	r.Max.Y -= pad.Y
-	fr := frame.New(r, ft, b, frame.Acme)
+	fr := frame.New(r, ft, b, frame.Mono)
 	size := b.Bounds()
 	w := &Win{
 		sp:      sp,

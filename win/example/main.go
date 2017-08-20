@@ -133,6 +133,9 @@ func main() {
 				if e.Direction == 2 {
 					continue
 				}
+				if byte(e.Rune) == '\x1a'{
+					
+				}
 				kbd.SendClient(w, e)
 				ckdirt()
 			case size.Event:

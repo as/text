@@ -1,13 +1,16 @@
 package text
 
-import "github.com/as/event"
+import (
+	"github.com/as/event"
+	"github.com/as/worm"
+)
 
 type history struct {
 	Editor
-	l Logger
+	l worm.Logger
 }
 
-func NewHistory(ed Editor, l Logger) Editor {
+func NewHistory(ed Editor, l worm.Logger) Editor {
 	return &history{
 		Editor: ed,
 		l:      l,
@@ -15,7 +18,7 @@ func NewHistory(ed Editor, l Logger) Editor {
 }
 
 func (w *history) Insert(p []byte, q0 int64) int {
-	if len(p) == 0{
+	if len(p) == 0 {
 		return 0
 	}
 	n := w.Editor.Insert(p, q0)
