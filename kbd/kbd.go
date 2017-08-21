@@ -1,9 +1,10 @@
 package kbd
 
 import (
-	"github.com/as/frame/font"
-	"github.com/as/text"
 	"golang.org/x/mobile/event/key"
+	"github.com/as/frame/font"
+	"github.com/as/text/find"
+	"github.com/as/text"
 )
 
 func setFont(ed text.Editor, size int) {
@@ -20,7 +21,7 @@ func setFont(ed text.Editor, size int) {
 }
 
 // markDirt calls Mark if the editor implements
-// the text.Dirt interface
+// the find.Dirt interface
 func markDirt(ed text.Editor) {
 	if ed, ok := ed.(text.Dirt); ok {
 		ed.Mark()
@@ -29,7 +30,6 @@ func markDirt(ed text.Editor) {
 
 // Send process a keyboard event with the editor
 func SendClient(hc text.Editor, e key.Event) {
-
 	if e.Direction == key.DirRelease {
 		return
 	}
@@ -95,20 +95,20 @@ func SendClient(hc text.Editor, e key.Event) {
 			if q0 < int64(len(p))-1 {
 				q0++
 			}
-			n0, n1 := text.Findlinerev(hc.Bytes(), q0, 0)
+			n0, n1 := find.Findlinerev(hc.Bytes(), q0, 0)
 			if e.Rune == '\x15' {
 				hc.Delete(n0, n1)
 			}
 			hc.Select(n0, n0)
 		case '\x05': // ^E
-			_, n1 := text.Findline3(hc.Bytes(), q1, 1)
+			_, n1 := find.Findline3(hc.Bytes(), q1, 1)
 			if n1 > 0 {
 				n1--
 			}
 			hc.Select(n1, n1)
 		case '\x17':
-			if text.Isany(hc.Bytes()[q0], text.AlphaNum) {
-				q0 = text.Acceptback(hc.Bytes(), q0, text.AlphaNum)
+			if find.Isany(hc.Bytes()[q0], find.AlphaNum) {
+				q0 = find.Acceptback(hc.Bytes(), q0, find.AlphaNum)
 			}
 			hc.Delete(q0, q1)
 			//hc.Select(q0-1, q0-1)
