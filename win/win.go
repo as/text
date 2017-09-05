@@ -4,6 +4,8 @@ import (
 	"image"
 	"image/color"
 
+	"golang.org/x/exp/shiny/screen"
+
 	"github.com/as/frame"
 	"github.com/as/frame/font"
 	"github.com/as/text"
@@ -11,20 +13,63 @@ import (
 	"image/draw"
 )
 
+type Window struct {
+	name          string
+	id            string
+	sp, pad, size image.Point
+	dirty         bool
+	buf           screen.Buffer
+	win           screen.Window
+	src           screen.Screen
+}
+
+type Column struct {
+	Body []Node
+}
+
+type Node interface {
+	Bounds() image.Rectangle
+	Dirty() bool
+	Size() image.Point
+	Move(sp image.Point)
+	Resize(size image.Point)
+	SendDown(interface{})
+	SendUp(interface{})
+}
+
+func (w *Window) Bounds() image.Rectangle {
+	return image.ZR
+}
+func (w *Window) Dirty() bool {
+	return false
+}
+func (w *Window) Size() image.Point {
+	return image.ZP
+}
+func (w *Window) Move(sp image.Point) {
+}
+func (w *Window) Resize(size image.Point) {
+}
+func (w *Window) Handle(event interface{}) {
+
+}
+func (w *Window) Kid() {
+}
+
 type Win struct {
 	sp, pad, size image.Point
 	*frame.Frame
 	text.Editor
 	dirty   bool
 	org     int64
-	Scrollr   image.Rectangle
-	bar image.Rectangle
-
+	Scrollr image.Rectangle
+	bar     image.Rectangle
 }
-func (w *Win) Dot() (int64,int64){
+
+func (w *Win) Dot() (int64, int64) {
 	return w.Editor.Dot()
 }
-func (w *Win) Len() int64{
+func (w *Win) Len() int64 {
 	return w.Editor.Len()
 }
 
@@ -42,16 +87,16 @@ func New(sp, pad image.Point, b *image.RGBA, ed text.Editor, ft *font.Font) *Win
 	r.Min.X += pad.X
 	r.Min.Y += pad.Y
 	r.Max.Y -= pad.Y
-	fr := frame.New(r, ft, b, frame.Mono)
+	fr := frame.New(r, ft, b, frame.A)
 	size := b.Bounds()
 	w := &Win{
-		sp:      sp,
-		pad:     pad,
-		size:    image.Pt(size.Dx(),size.Dy()),
-		Frame:   fr,
+		sp:     sp,
+		pad:    pad,
+		size:   image.Pt(size.Dx(), size.Dy()),
+		Frame:  fr,
 		Editor: ed,
 	}
-	if w.Editor == nil{
+	if w.Editor == nil {
 		ed, _ := text.Open(text.NewBuffer())
 		w.Editor = ed
 	}
@@ -76,6 +121,8 @@ func (w *Win) Flush() {
 	w.dirty = false
 }
 
+// Dirty returns true if the window or any of its
+// underlying items are dirty
 func (w *Win) Dirty() bool {
 	return w.dirty
 }
@@ -90,55 +137,56 @@ func (w *Win) Insert(p []byte, q0 int64) (n int) {
 	// frame's visible area then we alter the frame. Otherwise
 	// there's no point in moving text down, it's just annoying.
 
-	switch q1 := q0+int64(len(p)); text.Region5(q0, q1, w.org-1, w.org+w.Frame.Len()+1){
+	switch q1 := q0 + int64(len(p)); text.Region5(q0, q1, w.org-1, w.org+w.Frame.Len()+1) {
 	case -2:
-		w.org += q1-q0
+		w.org += q1 - q0
 	case -1:
 		// Insertion to the left
 		w.Frame.Insert(p[q1-w.org:], 0)
-		w.org += w.org-q0;println(-2)
+		w.org += w.org - q0
+		println(-2)
 		w.dirty = true
 	case 1:
 		w.Frame.Insert(p[q0-w.org:], 0)
 		w.dirty = true
 	case 0:
-		if q0 < w.org{
+		if q0 < w.org {
 			w.Frame.Insert(p[q0-w.org:], 0)
-			w.org += w.org-q0
+			w.org += w.org - q0
 		} else {
 			w.Frame.Insert(p, q0-w.org)
 		}
 		w.dirty = true
 	}
-	if w.Editor == nil{
+	if w.Editor == nil {
 		panic("nil editor")
 	}
 	n = w.Editor.Insert(p, q0)
-	
+
 	return n
 }
 
 // This is already scroller territory
 
-func (w *Win) Delete(q0, q1 int64) (n int){
-	if w.Len() == 0{
+func (w *Win) Delete(q0, q1 int64) (n int) {
+	if w.Len() == 0 {
 		return 0
 	}
-	
+	w.Editor.Delete(q0, q1)
 
-	w.Editor.Delete(q0, q1)	
-
-	switch text.Region5(q0, q1, w.org-1, w.org+w.Frame.Len()+1){
+	switch text.Region5(q0, q1, w.org-1, w.org+w.Frame.Len()+1) {
 	case -2:
 		// Logically adjust origin to the left (up)
-		w.org -= q1-q0
+		w.org -= q1 - q0
 	case -1:
 		// Remove the visible text and adjust left
-		w.Frame.Delete(0, q0-w.org)
+		w.Frame.Delete(0, q1-w.org)
 		w.org = q0
 		w.Fill()
 		w.dirty = true
 	case 0:
+		q0 = clamp(q0, w.org, w.Frame.Len())
+		q1 = clamp(q1, w.org, w.Frame.Len())
 		w.Frame.Delete(q0-w.org, q1-w.org)
 		w.Fill()
 		w.dirty = true
@@ -148,9 +196,8 @@ func (w *Win) Delete(q0, q1 int64) (n int){
 		w.dirty = true
 	case 2:
 	}
-	return int(q1-q0+1)
+	return int(q1 - q0 + 1)
 }
-
 
 func (w *Win) sel(pp0, pp1, p0, p1 int64, col frame.Color) {
 	if pp1 <= p0 || p1 <= pp0 || p0 == p1 || pp1 == pp0 {

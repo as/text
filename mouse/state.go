@@ -68,6 +68,7 @@ type CommitEvent struct {
 	mouse.Event
 }
 type ScrollEvent struct {
+	Dy int
 	mouse.Event
 	selecting bool
 }
@@ -84,6 +85,7 @@ func none(m *Machine, e mouse.Event) StateFn {
 		return marking(m, e)
 	}
 	m.first = mouse.Event{}
+	m.down = 0
 	return none
 }
 
@@ -100,36 +102,39 @@ func marking(m *Machine, e mouse.Event) StateFn {
 			Time:   t,
 		}
 		m.Send(m.lastclick)
+		// return selecting
+		return sweeping(m, e)
 	}
+	m.Clickzone = image.Rect(-1, -2, 1, 2).Add(pt(e))
 	return sweeping(m, e)
 }
 
 func selecting(m *Machine, e mouse.Event) StateFn {
 	if m.terminates(e) {
-		//fmt.Printf("CommitEvent: event = %#v\n", e)
 		return commit(m, e)
 	}
 	return none
 }
 
 func sweeping(m *Machine, e mouse.Event) StateFn {
+Loop:
 	for {
 		if m.terminates(e) {
 			switch {
-			case m.CloseTo(e, m.first):
+			case m.CloseTo(e, m.first) && e.Button == 1 && m.first.Button == 1:
 				t := time.Now()
 				m.lastclick = ClickEvent{
 					Event: e,
 					Time:  t,
 				}
-				m.Send(m.lastclick)
-				return none
+				m.SendFirst(m.lastclick)
+				return selecting(m, e)
 			default:
 				m.SendFirst(SelectEvent{Event: e})
-				return selecting
+				return selecting(m, e)
 			}
 		}
-		if m.press(e) {
+		if m.first.Button == 1 && m.press(e) {
 			switch {
 			case m.mid(e):
 				return snarfing(m, e)
@@ -137,21 +142,26 @@ func sweeping(m *Machine, e mouse.Event) StateFn {
 				return inserting(m, e)
 			}
 		}
-
 		select {
 		case e0 := <-m.Sink:
 			m.lastsweep = e
 			e = e0
+			if m.press(e) {
+				continue Loop
+			}
 		case <-clock60:
 		}
-		e.Button = m.first.Button
-		m.Send(SweepEvent{
-			Event: e,
-			Ctr:   m.ctr,
-			last:  m.lastsweep,
-		})
-		m.ctr++
-		m.lastsweep = e
+		if m.ctr == 0 || m.Clickzone == image.ZR || pt(e).In(m.Clickzone) {
+			e.Button = m.first.Button
+			m.Send(SweepEvent{
+				Event: e,
+				Ctr:   m.ctr,
+				last:  m.lastsweep,
+			})
+			m.ctr++
+			m.lastsweep = e
+			m.Clickzone = image.ZR
+		}
 	}
 	return sweeping
 }
@@ -186,7 +196,7 @@ func inserting(m *Machine, e mouse.Event) StateFn {
 			m.Send(InsertEvent{Event: e})
 			return inserting
 		}
-	case m.terminates(e):
+	case e.Button == 1 && e.Direction == 2:
 		return commit(m, e)
 	}
 	return inserting

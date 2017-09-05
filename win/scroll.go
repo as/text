@@ -1,8 +1,8 @@
 package win
 
 import (
-	"image"
 	"github.com/as/text"
+	"image"
 	"image/color"
 	"image/draw"
 )
@@ -14,7 +14,7 @@ func (w *Win) scrollinit(pad image.Point) {
 	if pad.X > minSbWidth+3 {
 		sr := w.Frame.RGBA().Bounds()
 		sr.Max.X = minSbWidth
-		sr.Max.Y = sr.Dy()-pad.Y*2
+		sr.Max.Y = sr.Dy() - pad.Y*2
 		w.Scrollr = sr
 	}
 	w.Frame.Draw(w.Frame.RGBA(), w.realsbr(w.Scrollr), X, image.ZP, draw.Src)
@@ -39,7 +39,7 @@ func (w *Win) Scroll(dl int) {
 }
 func (w *Win) SetOrigin(org int64, exact bool) {
 	org = clamp(org, 0, w.Len())
-	if org == w.org{
+	if org == w.org {
 		return
 	}
 	w.Mark()
@@ -55,21 +55,21 @@ func (w *Win) SetOrigin(org int64, exact bool) {
 	w.setOrigin(clamp(org, 0, w.Len()))
 }
 func (w *Win) setOrigin(org int64) {
-	if org == w.org{
+	if org == w.org {
 		return
 	}
 	fl := w.Frame.Len()
 	switch text.Region5(org, org+fl, w.org, w.org+fl) {
 	case -1:
 		w.Frame.Insert(w.Bytes()[org:org+(w.org-org)], 0)
-		w.org= org
+		w.org = org
 	case -2, 2:
 		w.Frame.Delete(0, w.Frame.Len())
-		w.org= org
+		w.org = org
 		w.Fill()
 	case 1:
 		w.Frame.Delete(0, org-w.org)
-		w.org= org
+		w.org = org
 		w.Fill()
 	case 0:
 		panic("never happens")
@@ -81,10 +81,11 @@ func (w *Win) setOrigin(org int64) {
 	q0, q1 := w.Dot()
 	w.drawsb()
 	w.Select(q0, q1)
-	if q0 == q1 && text.Region3(q0, w.org, w.org+w.Frame.Len()) != 0{
+	if q0 == q1 && text.Region3(q0, w.org, w.org+w.Frame.Len()) != 0 {
 		w.Untick()
 	}
 }
+
 /*
 func (w *Win) SetOrigin(org int64, exact bool) {
 	org = clamp(org, 0, w.Len())
@@ -158,7 +159,7 @@ func clamp(v, l, h int64) int64 {
 }
 
 func (w *Win) Clicksb(pt image.Point, dir int) {
-	var(
+	var (
 		rat float64
 	)
 	pt.Y -= w.pad.Y
@@ -173,7 +174,7 @@ func (w *Win) Clicksb(pt image.Point, dir int) {
 		delta := int64(fl * rat)
 		n -= delta
 	case 0:
-		rat = (ptY - barY0) / (barY1-barY0)
+		rat = (ptY - barY0) / (barY1 - barY0)
 		delta := int64(fl * rat)
 		n += delta
 	case 1:
@@ -185,22 +186,21 @@ func (w *Win) Clicksb(pt image.Point, dir int) {
 	w.drawsb()
 }
 
-
-func (w *Win) realsbr(r image.Rectangle) image.Rectangle{
+func (w *Win) realsbr(r image.Rectangle) image.Rectangle {
 	return r.Add(w.sp).Add(image.Pt(0, w.pad.Y))
 }
 
 func (w *Win) drawsb() {
 	r := w.Scrollr
 	dy := float64(r.Dy())
-	rat0 := float64(w.org) / float64(w.Len())          // % scrolled
+	rat0 := float64(w.org) / float64(w.Len())               // % scrolled
 	rat1 := float64(w.org+w.Frame.Len()) / float64(w.Len()) // % covered by screen
 	r.Min.Y = int(dy * rat0)
 	r.Max.Y = int(dy * rat1)
 	if r.Max.Y-r.Min.Y < 3 {
 		r.Max.Y = r.Min.Y + 3
 	}
-	w.Frame.Draw(w.Frame.RGBA(), w.realsbr(w.bar) , X, image.ZP, draw.Src)
+	w.Frame.Draw(w.Frame.RGBA(), w.realsbr(w.bar), X, image.ZP, draw.Src)
 	w.bar = r
 	w.Frame.Draw(w.Frame.RGBA(), w.realsbr(w.bar), LtGray, image.ZP, draw.Src)
 

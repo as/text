@@ -1,10 +1,12 @@
 package kbd
 
 import (
-	"golang.org/x/mobile/event/key"
+	"log"
+
 	"github.com/as/frame/font"
-	"github.com/as/text/find"
 	"github.com/as/text"
+	"github.com/as/text/find"
+	"golang.org/x/mobile/event/key"
 )
 
 func setFont(ed text.Editor, size int) {
@@ -36,6 +38,7 @@ func SendClient(hc text.Editor, e key.Event) {
 	if e.Rune == '\r' {
 		e.Rune = '\n'
 	}
+	defer markDirt(hc)
 	q0, q1 := hc.Dot()
 	switch e.Code {
 	case key.CodeEqualSign, key.CodeHyphenMinus:
@@ -111,11 +114,16 @@ func SendClient(hc text.Editor, e key.Event) {
 				q0 = find.Acceptback(hc.Bytes(), q0, find.AlphaNum)
 			}
 			hc.Delete(q0, q1)
-			//hc.Select(q0-1, q0-1)
+
 		case '\x08':
 			fallthrough
 		default:
+			if q0 > q1 {
+				q0, q1 = q1, q0
+			}
+			log.Printf("delete %d:%d\n", q0, q1)
 			hc.Delete(q0, q1)
+			hc.Select(q0, q0)
 		}
 		//		hc.Mark()
 		return
@@ -129,4 +137,5 @@ func SendClient(hc text.Editor, e key.Event) {
 	q1 += int64(hc.Insert(ch, q0))
 	q0 = q1
 	hc.Select(q0, q1)
+
 }

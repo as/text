@@ -16,10 +16,10 @@ func (w *buf) Len() int64 {
 }
 
 func (w *buf) Select(q0, q1 int64) {
-	if q0 < 0{
+	if q0 < 0 {
 		return
 	}
-	if q1 > w.Len(){
+	if q1 > w.Len() {
 		q1 = w.Len()
 	}
 	w.Q0, w.Q1 = q0, q1
@@ -29,16 +29,16 @@ func (w *buf) Insert(s []byte, q0 int64) (n int) {
 	if n = len(s); n == 0 {
 		return 0
 	}
-	if q0 < 0{
+	if q0 < 0 {
 		// Let's be precise and annoying
 		// 0 is the real lower bound
 		return 0
 	}
-	if q0 == 0{
+	if q0 == 0 {
 		w.R = append(s, w.R...) // append(s, w.R[q0:]...)...)
 		return n
 	}
-	if q0 >= w.Len() { // Common case: append 
+	if q0 >= w.Len() { // Common case: append
 		w.R = append(w.R, s...)
 		return n
 	}
@@ -48,10 +48,10 @@ func (w *buf) Insert(s []byte, q0 int64) (n int) {
 }
 
 func (w *buf) Delete(q0, q1 int64) (n int) {
-	if q1 < q0 || q0 < 0{
+	if q1 < q0 || q0 < 0 {
 		return 0
 	}
-	if n = int(q1-q0); n == 0 {
+	if n = int(q1 - q0); n == 0 {
 		return 0
 	}
 	nr := w.Len()

@@ -4,15 +4,10 @@ import (
 	//	"github.com/as/clip"
 	//
 	"fmt"
-	"image"
-	"image/draw"
-	"io/ioutil"
-	"log"
-	"os"
-	"sync"
-	"time"
 	"github.com/as/frame/font"
+	"github.com/as/text"
 	"github.com/as/text/win"
+	"github.com/as/worm"
 	"golang.org/x/exp/shiny/driver"
 	"golang.org/x/exp/shiny/screen"
 	"golang.org/x/image/font/gofont/gomedium"
@@ -21,14 +16,19 @@ import (
 	"golang.org/x/mobile/event/mouse"
 	"golang.org/x/mobile/event/paint"
 	"golang.org/x/mobile/event/size"
-	"github.com/as/text"
-	"github.com/as/worm"
+	"image"
+	"image/draw"
+	"io/ioutil"
+	"log"
+	"os"
+	"sync"
+	"time"
 
 	kbd "github.com/as/text/kbd"
 	mous "github.com/as/text/mouse"
 )
 
-var winSize = image.Pt(2560,1350)
+var winSize = image.Pt(2560, 1350)
 var tagY = 16
 var fontdy = 16
 
@@ -44,29 +44,25 @@ func main() {
 		focused = focused
 		pad := image.Pt(fontdy, fontdy)
 
-		sp  := image.Pt(0,0)
-		sp1 := image.Pt(winSize.X-winSize.X/3,0 )
+		sp := image.Pt(0, 0)
+		sp1 := image.Pt(winSize.X-winSize.X/3, 0)
 
-		r := image.Rect(0,0,winSize.X,winSize.Y)
-		r.Max.X -= r.Max.X/3
+		r := image.Rect(0, 0, winSize.X, winSize.Y)
+		r.Max.X -= r.Max.X / 3
 		b, _ := src.NewBuffer(r.Max)
-
-
 
 		lg := worm.NewCoalescer(worm.NewLogger(), time.Second*1)
 
-
-
 		ed, _ := text.Open(text.NewBuffer())
-		ed = text.NewHistory( text.Trace(ed),lg )
+		ed = text.NewHistory(ed, lg)
 		w := win.New(r.Min, pad, b.RGBA(), ed, font.NewTTF(gomedium.TTF, fontdy))
 
 		r.Min.X = r.Max.X
 		r.Max.X = winSize.X
-		b1, _ := src.NewBuffer(image.Pt(winSize.X/3,winSize.Y))
+		b1, _ := src.NewBuffer(image.Pt(winSize.X/3, winSize.Y))
 		st0 := win.New(sp1, pad, b1.RGBA(), nil, font.NewTTF(gomedium.TTF, 11))
 
-		wind.Upload(image.Pt(0,0), b, b.Bounds())
+		wind.Upload(image.Pt(0, 0), b, b.Bounds())
 		wind.Upload(r.Min, b1, b.Bounds())
 		wind.Send(paint.Event{})
 		mousein := mous.NewMouse(time.Second/3, wind)
@@ -89,16 +85,16 @@ func main() {
 		mousein.Machine.SetRect(image.Rect(r.Min.X, r.Min.Y+pad.Y, r.Max.X, r.Max.Y-pad.Y))
 		_ = fmt.Println
 		last := int64(0)
-		ckdirt := func(){
-				dirty := false
-				for ;last != lg.Len(); last++{
-					p, _ := lg.ReadAt(last)
-					st0.Insert([]byte(fmt.Sprintf("%d\t%s", last, p)), 0)
-					dirty=true
-				}
-				if dirty ||st0.Dirty() || w.Dirty(){
-					wind.Send(paint.Event{})
-				}
+		ckdirt := func() {
+			dirty := false
+			for ; last != lg.Len(); last++ {
+				p, _ := lg.ReadAt(last)
+				st0.Insert([]byte(fmt.Sprintf("%d\t%s", last, p)), 0)
+				dirty = true
+			}
+			if dirty || st0.Dirty() || w.Dirty() {
+				wind.Send(paint.Event{})
+			}
 		}
 		for {
 			switch e := wind.NextEvent().(type) {
@@ -133,8 +129,8 @@ func main() {
 				if e.Direction == 2 {
 					continue
 				}
-				if byte(e.Rune) == '\x1a'{
-					
+				if byte(e.Rune) == '\x1a' {
+
 				}
 				kbd.SendClient(w, e)
 				ckdirt()

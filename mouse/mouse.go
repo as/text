@@ -22,7 +22,7 @@ type Mouse struct {
 
 func NewMouse(delay time.Duration, events text.Sender) *Mouse {
 	m := &Mouse{
-		Last:    []Click{Click{}, Click{}},
+		Last:    []Click{{}, {}},
 		doubled: delay,
 		Machine: NewMachine(events),
 	}
@@ -56,8 +56,18 @@ func yRegion(y, ymin, ymax int) int {
 // w.Bounds
 // w.Select
 
+type nopSweeper struct{
+	text.Sweeper
+}
+func NewNopScroller(w text.Sweeper) text.Sweeper{
+	return &nopSweeper{w}
+}
+func (*nopSweeper) Scroll(n int){
+	return
+}
+
 func Sweep(w text.Sweeper, e SweepEvent, padY int, s, q0, q1 int64, drain text.Sender) (int64, int64, int64) {
-	r := w.Bounds()
+	r := image.Rectangle{image.ZP, w.Size()}
 	y := int(e.Y)
 	units := 1
 	if t, ok := w.(interface {
@@ -65,28 +75,51 @@ func Sweep(w text.Sweeper, e SweepEvent, padY int, s, q0, q1 int64, drain text.S
 	}); ok {
 		units = t.Dy()
 	}
-	reg := yRegion(y, r.Min.Y+padY, r.Max.Y-padY)
+
+	// There is a huge difference between the points involved in the region test
+	// and the actual position of the window. Coordinates need to be normalized
+	// so that this window's origin (not the frame) aligns with (0,0). Typically
+	// this will look like this:
+	//
+	// Win:     (0-0)-(1024,768)
+	// Frame: (15,15)-(1024-15,768-15)
+	lo := r.Min.Y + padY
+	hi := r.Dy() - padY
+
+	reg := yRegion(y, lo, hi)
 	if reg != 0 {
 		if reg == 1 {
-			w.Scroll(-1 + (y/units)*5)
+			w.Scroll(-((lo-y)%units + 1) * 3)
 		} else {
-			w.Scroll(1 + ((y-r.Max.Y)/units)*5)
+			w.Scroll(+((y-hi)%units + 1) * 3)
 		}
 		if drain != nil {
 			drain.SendFirst(Drain{})
 			drain.Send(DrainStop{})
 		}
+
 	} else if !e.Motion() {
 		return s, q0, q1
 	}
 	q := w.IndexOf(image.Pt(int(e.X), int(e.Y))) + w.Origin()
+	if q0 == s{
+		if q < q0{
+			return q0, q, q0
+		}
+		return q0, q0, q
+	}
+	if q > q1 {
+		return q1, q1, q
+	}
+	return q1, q, q1
+	/*
 	if s == q0 {
-		if q < q0 {
+		if q < q0 {	// crossover on the left
 			q1 = q0
 			s = q0
 			w.Select(q, s)
 			q0 = q
-		} else {
+		} else if q > q0 { // increasing to the right
 			w.Select(s, q)
 			q1 = q
 		}
@@ -102,6 +135,8 @@ func Sweep(w text.Sweeper, e SweepEvent, padY int, s, q0, q1 int64, drain text.S
 		}
 	}
 	return s, q0, q1
+
+*/
 }
 func (m *Mouse) Process(e mouse.Event) {
 	m.Sink <- e

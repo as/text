@@ -53,6 +53,7 @@ type Sweeper interface {
 	Projector
 	Scroller
 	Selector
+	Swap() bool
 }
 
 type Scroller interface {

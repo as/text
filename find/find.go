@@ -7,8 +7,8 @@ import (
 	"io"
 	"regexp"
 
-	"github.com/as/text"
 	"github.com/as/io/rev"
+	"github.com/as/text"
 )
 
 var (
@@ -16,6 +16,7 @@ var (
 	Rights   = [...]byte{')', '}', ']', '>', '\''}
 	Free     = [...]byte{'"', '\'', '`', '\n'}
 	AlphaNum = []byte("*&!%-_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+	AlphaNumFile = []byte(`*&!%-_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/:,\.`)
 )
 
 func Run(br io.ByteScanner, s []byte) (n int) {
@@ -54,12 +55,51 @@ func Isany(b byte, s []byte) bool {
 	return false
 }
 
+func ExpandFile(p []byte, i int64) (int64, int64){
+	j := Accept(p, i, AlphaNumFile)
+	i = Acceptback(p, i, AlphaNumFile)
+	return i, j
+}
+
 func Expand(p []byte, i int64) (int64, int64) {
 	j := Accept(p, i, AlphaNum)
 	i = Acceptback(p, i, AlphaNum)
 	return i, j
 }
 
+
+
+func FreeExpand(f text.Editor, i int64) (int64, int64){
+	p := f.Bytes()
+	if len(p) == 0 || i < 0 || i > int64(len(p))-1{
+		return i, i
+	}
+	if i != 0{
+	if which := Any(p[i-1], Lefts[:]); which != -1{
+		br := bytes.NewReader(f.Bytes()[i:])
+		d0 := Parity(br, Lefts[which], Rights[which], false)
+		if d0 != -1 {
+			return i, i+int64(d0)-1
+		}
+	}
+	if i < int64(len(p)){
+	if which := Any(p[i], Free[:]); which != -1{
+		j := Findback(p, i-1, []byte{Free[which]})
+		if j != -1{
+			return i-(i-j), i
+		}
+	}
+	}
+	if which := Any(p[i-1], Free[:]); which != -1{
+		j := Find(p, i, []byte{Free[which]})
+		if j != -1{
+			return i, j
+		}
+	}
+	}
+	return Expand(p, i)
+}
+ 
 func Acceptback(p []byte, i int64, sep []byte) int64 {
 	q0 := i
 	for ; q0-1 >= 0 && Isany(p[q0-1], sep); q0-- {
@@ -67,7 +107,7 @@ func Acceptback(p []byte, i int64, sep []byte) int64 {
 	return q0
 }
 func Accept(p []byte, q1 int64, sep []byte) int64 {
-	for ; q1 != int64(len(p))-1 && Isany(p[q1], sep); q1++ {
+	for ; q1 < int64(len(p)) && Isany(p[q1], sep); q1++ {
 	}
 	return q1
 }
@@ -90,44 +130,52 @@ func Find(p []byte, j int64, sep []byte) int64 {
 	}
 	return q1
 }
-
-func FindParity(f text.Editor) (q0, q1 int64, ok bool) {
-	q0, q1 = f.Dot()
-	for i := range Lefts {
-		q0, q1 = findParity(f, Lefts[i], Rights[i], false)
-		if q0 != -1 {
-			return q0, q1, true
-		}
-	}
-	return -1, -1, false
-}
-
-func findParity(f text.Editor, l byte, r byte, back bool) (int64, int64) {
+func Parity(br io.ByteReader, l byte, r byte, back bool) (n int) {
 	if back {
 		panic("unimplemented")
 	}
-	/*
-		b := t.ReadByte()
-		if b != l {
-			return -1, -1
-		}
-	*/
 	push := 1
-	//j := -1
-	q0, _ := f.Dot()
-	for i, v := range f.Bytes()[q0:] {
-		if v == l {
-			push++
+	var err error
+	for ; err == nil && push != 0; n++{
+		b, err := br.ReadByte()
+		if err != nil && err != io.EOF{
+			break
 		}
-		if v == r {
+		if b == l{
+			push++
+		} else if b == r{
 			push--
-			if push == 0 {
-				return q0, q0 + int64(i)
-			}
 		}
 	}
-	return -1, -1
+	if err != nil && err != io.EOF || push != 0{
+		return -1
+	}
+	return n
 }
+func findParity(br io.ByteReader, l byte, r byte, back bool) (n int) {
+	if back {
+		panic("unimplemented")
+	}
+	push := 1
+	var err error
+	for ; err == nil && push != 0; n++{
+		b, err := br.ReadByte()
+		if err != nil && err != io.EOF{
+			break
+		}
+		if b == l{
+			push++
+		} else if b == r{
+			push--
+		}
+	}
+println("n is"); println(n)
+	if err != nil && err != io.EOF || push != 0{
+		return -1
+	}
+	return n
+}
+
 func FindNext(f text.Editor, text []byte) (q0, q1 int64) {
 	i, j := f.Dot()
 	p := f.Bytes()
@@ -142,7 +190,6 @@ func FindNext(f text.Editor, text []byte) (q0, q1 int64) {
 		q0 += j
 	}
 	q1 = q0 + int64(len(x))
-	println("d")
 	return q0, q1
 }
 
@@ -234,4 +281,14 @@ func FindLine(r io.Reader, dy int) (q0, q1 int64) {
 		}
 	}
 	return
+}
+func FindParity(f text.Editor) (q0, q1 int64, ok bool) {
+	q0, q1 = f.Dot()
+	for i := range Lefts {
+		d0 := findParity(bytes.NewReader(f.Bytes()[q0:]), Lefts[i], Rights[i], false)
+		if q0 != -1 {
+			return q0, q0+int64(d0)-1, true
+		}
+	}
+	return q0, q1, false
 }

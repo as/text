@@ -14,6 +14,7 @@ import (
 type Machine struct {
 	r         image.Rectangle
 	Sink      chan mouse.Event
+	Buffered  chan mouse.Event
 	down      mouse.Button
 	first     mouse.Event
 	double    time.Duration
@@ -22,6 +23,7 @@ type Machine struct {
 	ctr       int
 	// Should only send events, no recieving.
 	text.Sender
+	Clickzone image.Rectangle
 }
 
 // NewMachine initialize a new state machine with no-op
@@ -45,7 +47,7 @@ func (m *Machine) press(e mouse.Event) bool {
 		return false
 	}
 	if e.Button&m.down != 0 {
-		return false
+		//return false
 		//panic("bug: mouse button pressed > 1 without release")
 	}
 	m.down |= e.Button
@@ -68,7 +70,6 @@ func (m *Machine) release(e mouse.Event) bool {
 	return true
 }
 func (m *Machine) CloseTo(e, f mouse.Event) bool {
-	//return false
 	//fmt.Println(abs(int(e.X-f.X)))
 	//fmt.Println(abs(int(e.Y-f.Y)))
 	return abs(int(e.X-f.X)) < 2 && abs(int(e.Y-f.Y)) < 2
@@ -86,42 +87,33 @@ func (m *Machine) terminates(e mouse.Event) bool {
 }
 
 func (m *Machine) Run() chan mouse.Event {
-	seive := make(chan mouse.Event, 100)
 	go func() {
-		ev := <-seive
-		dx, dy := 0, 0
-		for {
-			select {
-			case e := <-seive:
-				if e.Button != 0 || e.Direction != 0 {
-					ev = e
-					m.Sink <- e
-					continue
+		fn := none
+		dy := 0
+		for e := range m.Sink {
+			if e.Button.IsWheel(){
+				dy++
+				select{
+				case e0 := <- m.Sink:
+					if !e.Button.IsWheel(){
+						m.Send(ScrollEvent{Event: e, Dy: dy})
+						dy = 0
+						e = e0
+						fn = fn(m, e)
+						break
+					}
+					dy++
+				case <-clock60:
+					m.Send(ScrollEvent{Event: e, Dy: dy})
+					dy=0
 				}
-				dx0, dy0 := 1, 1
-				if ev.X < e.X {
-					dy0 = -1
-				}
-				if ev.Y < e.Y {
-					dy0 = -1
-				}
-				if dy0 != dy || dx0 != dx {
-					ev = e
-				}
-				if len(seive) > 10 {
-					continue
-				}
-				m.Sink <- ev
+			} else {
+				dy = 0
+				fn = fn(m, e)
 			}
 		}
 	}()
-	go func() {
-		fn := none
-		for e := range m.Sink {
-			fn = fn(m, e)
-		}
-	}()
-	return seive
+	return  m.Sink 
 }
 
 var clock60 = time.NewTicker(time.Millisecond * 20).C
@@ -133,4 +125,8 @@ func abs(a int) int {
 		return -a
 	}
 	return a
+}
+
+func pt(e mouse.Event) image.Point {
+	return image.Pt(int(e.X), int(e.Y))
 }

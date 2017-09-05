@@ -18,10 +18,10 @@ func (f *file) Insert(p []byte, at int64) (n int){
 		if sp-dy < at+dx{
 			sp -= dy+(sp-dy) (at+dx)
 		}
-		
+
 	}
-	
-	
+
+
 }
 
 type File struct{

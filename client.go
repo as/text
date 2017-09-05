@@ -17,7 +17,7 @@ func Open(b Buffer) (w Editor, err error) {
 
 // client is a non-graphical editor that maintains a coherent
 // selection across insertion/deletions and maintains a local
-// buffer. 
+// buffer.
 type client struct {
 	Buffer
 	q0, q1 int64
