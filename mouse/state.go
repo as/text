@@ -128,17 +128,21 @@ Loop:
 					Time:  t,
 				}
 				m.SendFirst(m.lastclick)
+				println("a")
 				return selecting(m, e)
 			default:
 				m.SendFirst(SelectEvent{Event: e})
+				println("b")
 				return selecting(m, e)
 			}
 		}
 		if m.first.Button == 1 && m.press(e) {
 			switch {
 			case m.mid(e):
+				println("c")
 				return snarfing(m, e)
 			case m.right(e):
+				println("d")
 				return inserting(m, e)
 			}
 		}
@@ -148,8 +152,11 @@ Loop:
 			e = e0
 			if m.press(e) {
 				continue Loop
-			}
+			}  
 		case <-clock60:
+		}
+		if e.Button == 1 && e.Direction == 2{
+			return selecting(m, e)
 		}
 		if m.ctr == 0 || m.Clickzone == image.ZR || pt(e).In(m.Clickzone) {
 			e.Button = m.first.Button
