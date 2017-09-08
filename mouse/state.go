@@ -31,14 +31,11 @@ type Action func(mouse.Event)
 
 type MarkEvent struct {
 	mouse.Event
+	Time   time.Time
+	Double bool
 }
 type SelectEvent struct {
 	mouse.Event
-}
-type ClickEvent struct {
-	mouse.Event
-	Time   time.Time
-	Double bool
 }
 type SweepEvent struct {
 	mouse.Event
@@ -91,24 +88,23 @@ func none(m *Machine, e mouse.Event) StateFn {
 
 func marking(m *Machine, e mouse.Event) StateFn {
 	m.first = e
-	m.Send(MarkEvent{Event: e})
 	m.lastsweep = e
 	m.ctr = 0
 	t := time.Now()
-	if m.lastclick.Button == 1 && t.Sub(m.lastclick.Time) < m.double {
-		m.lastclick = ClickEvent{
-			Event:  e,
-			Double: true,
-			Time:   t,
-		}
-		m.Send(m.lastclick)
-		// return selecting
-		return sweeping(m, e)
-	}
 	m.Clickzone = image.Rect(-1, -2, 1, 2).Add(pt(e))
+	m.LastMark = MarkEvent{
+		Event: e,
+		Time: t,
+		Double: t.Sub(m.LastMark.Time) < m.double,
+	}
+	m.Send(m.LastMark)
+	println("marking")
 	return sweeping(m, e)
 }
-
+func commit(m *Machine, e mouse.Event) StateFn {
+	m.Send(CommitEvent{Event: e})
+	return none
+}
 func selecting(m *Machine, e mouse.Event) StateFn {
 	if m.terminates(e) {
 		return commit(m, e)
@@ -117,22 +113,15 @@ func selecting(m *Machine, e mouse.Event) StateFn {
 }
 
 func sweeping(m *Machine, e mouse.Event) StateFn {
+
 Loop:
 	for {
 		if m.terminates(e) {
-			switch {
-			case m.CloseTo(e, m.first) && e.Button == 1 && m.first.Button == 1:
-				t := time.Now()
-				m.lastclick = ClickEvent{
-					Event: e,
-					Time:  t,
-				}
-				m.SendFirst(m.lastclick)
-				return selecting(m, e)
-			default:
-				m.SendFirst(SelectEvent{Event: e})
-				return selecting(m, e)
-			}
+			m.SendFirst(SelectEvent{Event: e})
+			return selecting(m, e)
+		}
+		if e.Button == 1 && e.Direction == 2 {
+			return selecting(m, e)
 		}
 		if m.first.Button == 1 && m.press(e) {
 			switch {
@@ -151,10 +140,7 @@ Loop:
 			}
 		case <-clock60:
 		}
-		if e.Button == 1 && e.Direction == 2 {
-			return selecting(m, e)
-		}
-		if m.ctr == 0 || m.Clickzone == image.ZR || pt(e).In(m.Clickzone) {
+		if  m.Clickzone == image.ZR || pt(e).In(m.Clickzone) {
 			e.Button = m.first.Button
 			m.Send(SweepEvent{
 				Event: e,
@@ -201,7 +187,4 @@ func inserting(m *Machine, e mouse.Event) StateFn {
 	}
 	return inserting
 }
-func commit(m *Machine, e mouse.Event) StateFn {
-	m.Send(CommitEvent{Event: e})
-	return none
-}
+

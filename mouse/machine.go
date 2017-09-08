@@ -14,15 +14,14 @@ import (
 type Machine struct {
 	r         image.Rectangle
 	Sink      chan mouse.Event
-	Buffered  chan mouse.Event
 	down      mouse.Button
 	first     mouse.Event
 	double    time.Duration
-	lastclick ClickEvent
 	lastsweep mouse.Event
 	ctr       int
 	// Should only send events, no recieving.
 	text.Sender
+	LastMark  MarkEvent
 	Clickzone image.Rectangle
 }
 
@@ -91,11 +90,11 @@ func (m *Machine) Run() chan mouse.Event {
 		fn := none
 		dy := 0
 		for e := range m.Sink {
-			if e.Button.IsWheel(){
+			if e.Button.IsWheel() {
 				dy++
-				select{
-				case e0 := <- m.Sink:
-					if !e.Button.IsWheel(){
+				select {
+				case e0 := <-m.Sink:
+					if !e.Button.IsWheel() {
 						m.Send(ScrollEvent{Event: e, Dy: dy})
 						dy = 0
 						e = e0
@@ -105,7 +104,7 @@ func (m *Machine) Run() chan mouse.Event {
 					dy++
 				case <-clock60:
 					m.Send(ScrollEvent{Event: e, Dy: dy})
-					dy=0
+					dy = 0
 				}
 			} else {
 				dy = 0
@@ -113,7 +112,7 @@ func (m *Machine) Run() chan mouse.Event {
 			}
 		}
 	}()
-	return  m.Sink 
+	return m.Sink
 }
 
 var clock60 = time.NewTicker(time.Millisecond * 20).C
