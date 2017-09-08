@@ -128,21 +128,17 @@ Loop:
 					Time:  t,
 				}
 				m.SendFirst(m.lastclick)
-				println("a")
 				return selecting(m, e)
 			default:
 				m.SendFirst(SelectEvent{Event: e})
-				println("b")
 				return selecting(m, e)
 			}
 		}
 		if m.first.Button == 1 && m.press(e) {
 			switch {
 			case m.mid(e):
-				println("c")
 				return snarfing(m, e)
 			case m.right(e):
-				println("d")
 				return inserting(m, e)
 			}
 		}
@@ -152,10 +148,10 @@ Loop:
 			e = e0
 			if m.press(e) {
 				continue Loop
-			}  
+			}
 		case <-clock60:
 		}
-		if e.Button == 1 && e.Direction == 2{
+		if e.Button == 1 && e.Direction == 2 {
 			return selecting(m, e)
 		}
 		if m.ctr == 0 || m.Clickzone == image.ZR || pt(e).In(m.Clickzone) {
@@ -173,10 +169,8 @@ Loop:
 	return sweeping
 }
 func snarfing(m *Machine, e mouse.Event) StateFn {
-	fmt.Printf("snarfing: event = %#v\n", e)
 	if m.press(e) {
 		if m.mid(e) {
-			fmt.Printf("SnarfEvent: = %#v\n", e)
 			m.Send(SnarfEvent{Event: e})
 			return snarfing
 		}
@@ -191,7 +185,6 @@ func snarfing(m *Machine, e mouse.Event) StateFn {
 }
 
 func inserting(m *Machine, e mouse.Event) StateFn {
-	fmt.Printf("inserting: event = %#v\n", e)
 	switch {
 	case m.press(e):
 		switch {
@@ -209,7 +202,6 @@ func inserting(m *Machine, e mouse.Event) StateFn {
 	return inserting
 }
 func commit(m *Machine, e mouse.Event) StateFn {
-	fmt.Printf("commit: event = %#v\n", e)
 	m.Send(CommitEvent{Event: e})
 	return none
 }
