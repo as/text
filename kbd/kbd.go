@@ -114,7 +114,7 @@ func SendClient(hc text.Editor, e key.Event) {
 				q0 = find.Acceptback(hc.Bytes(), q0, find.AlphaNum)
 			}
 			hc.Delete(q0, q1)
-
+			hc.Select(q0, q0)
 		case '\x08':
 			fallthrough
 		default:
