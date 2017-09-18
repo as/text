@@ -32,7 +32,7 @@ func NewMachine(deque text.Sender) *Machine {
 		Sink:   make(chan mouse.Event),
 		Sender: deque,
 		down:   0,
-		double: time.Second / 5,
+		double: time.Second / 3,
 	}
 }
 func (m *Machine) SetRect(r image.Rectangle) {
@@ -95,7 +95,7 @@ func (m *Machine) Run() chan mouse.Event {
 				select {
 				case e0 := <-m.Sink:
 					if !e.Button.IsWheel() {
-						m.Send(ScrollEvent{Event: e, Dy: dy})
+						m.Send(ScrollEvent{Event: e, Dy: 1})
 						dy = 0
 						e = e0
 						fn = fn(m, e)
@@ -103,7 +103,7 @@ func (m *Machine) Run() chan mouse.Event {
 					}
 					dy++
 				case <-clock60:
-					m.Send(ScrollEvent{Event: e, Dy: dy})
+					m.SendFirst(ScrollEvent{Event: e, Dy: dy})
 					dy = 0
 				}
 			} else {
@@ -115,7 +115,7 @@ func (m *Machine) Run() chan mouse.Event {
 	return m.Sink
 }
 
-var clock60 = time.NewTicker(time.Millisecond * 20).C
+var clock60 = time.NewTicker(time.Millisecond * 30).C
 
 //var clock60 = time.NewTicker(time.Millisecond*20).C
 

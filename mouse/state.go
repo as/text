@@ -97,12 +97,11 @@ func marking(m *Machine, e mouse.Event) StateFn {
 		Time: t,
 		Double: t.Sub(m.LastMark.Time) < m.double,
 	}
-	m.Send(m.LastMark)
-	println("marking")
+	m.SendFirst(m.LastMark)
 	return sweeping(m, e)
 }
 func commit(m *Machine, e mouse.Event) StateFn {
-	m.Send(CommitEvent{Event: e})
+	m.SendFirst(CommitEvent{Event: e})
 	return none
 }
 func selecting(m *Machine, e mouse.Event) StateFn {
@@ -157,7 +156,7 @@ Loop:
 func snarfing(m *Machine, e mouse.Event) StateFn {
 	if m.press(e) {
 		if m.mid(e) {
-			m.Send(SnarfEvent{Event: e})
+			m.SendFirst(SnarfEvent{Event: e})
 			return snarfing
 		}
 		if m.right(e) {
@@ -179,7 +178,7 @@ func inserting(m *Machine, e mouse.Event) StateFn {
 		case m.right(e):
 			//m.f.selecting = false
 			fmt.Printf("InsertEvent: = %#v\n", e)
-			m.Send(InsertEvent{Event: e})
+			m.SendFirst(InsertEvent{Event: e})
 			return inserting
 		}
 	case e.Button == 1 && e.Direction == 2:
