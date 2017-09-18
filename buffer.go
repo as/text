@@ -1,5 +1,7 @@
 package text
 
+import "io"
+
 func NewBuffer() Buffer {
 	return &buf{
 		R: make([]byte, 0, 64*1024),
@@ -23,6 +25,14 @@ func (w *buf) Select(q0, q1 int64) {
 		q1 = w.Len()
 	}
 	w.Q0, w.Q1 = q0, q1
+}
+
+func (w *buf) WriteAt(p []byte, at int64) (n int, err error){
+	if at+int64(len(p)) > w.Len(){
+		return 0, io.EOF
+	}
+	n = copy(w.R[at:], p)
+	return
 }
 
 func (w *buf) Insert(s []byte, q0 int64) (n int) {
