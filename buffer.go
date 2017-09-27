@@ -70,6 +70,11 @@ func (w *buf) Delete(q0, q1 int64) (n int) {
 	return int(n + 1)
 }
 
+func (w *buf) Close() error{
+	w.R = nil
+	return nil
+}
+
 func (w *buf) Dot() (q0, q1 int64) {
 	q0 = w.Q0
 	q1 = w.Q1

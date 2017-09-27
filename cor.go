@@ -56,6 +56,10 @@ func (c *COR) Delete(q0, q1 int64) int{
 	c.nod+= n
 	return n
 }
+func (c *COR) Close() (err error){
+	c.ed = nil
+	return err
+}
 func (c *COR) Flush() (err error) {
 	return c.co.Flush()
 }

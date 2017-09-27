@@ -10,11 +10,23 @@ type Buffer interface {
 	Delete(q0, q1 int64) (n int)
 	Len() int64
 	Bytes() []byte
+	Close() error
 }
 
 type Selector interface {
 	Select(q0, q1 int64)
 	Dot() (q0, q1 int64)
+}
+
+type File interface{
+	Named
+	Editor
+	Put() error
+	Get() error
+}
+
+type Named interface{
+	Name() string
 }
 
 type Editor interface {

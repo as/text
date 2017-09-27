@@ -61,3 +61,6 @@ func (c *client) Delete(q0, q1 int64) (n int) {
 	c.q0, c.q1 = Coherence(-1, q0, q1, c.q0, c.q1)
 	return n
 }
+func (c *client) Close() error{
+	return c.Buffer.Close()
+}
