@@ -8,6 +8,12 @@ func NewBuffer() Buffer {
 	}
 }
 
+func BufferFrom(b []byte) Buffer{
+	return &buf{
+		R: b,
+	}
+}
+
 type buf struct {
 	Q0, Q1 int64
 	R      []byte
