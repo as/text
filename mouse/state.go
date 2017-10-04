@@ -119,7 +119,7 @@ Loop:
 			m.SendFirst(SelectEvent{Event: e})
 			return selecting(m, e)
 		}
-		if e.Button == 1 && e.Direction == 2 {
+		if e.Direction == 2 {
 			return selecting(m, e)
 		}
 		if m.first.Button == 1 && m.press(e) {
