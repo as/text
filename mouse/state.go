@@ -137,7 +137,7 @@ Loop:
 			if m.press(e) {
 				continue Loop
 			}
-		case <-clock60:
+		case <-clock:
 		}
 		if  m.Clickzone == image.ZR || pt(e).In(m.Clickzone) {
 			e.Button = m.first.Button

@@ -102,7 +102,7 @@ func (m *Machine) Run() chan mouse.Event {
 						break
 					}
 					dy++
-				case <-clock60:
+				case <-clock:
 					m.SendFirst(ScrollEvent{Event: e, Dy: dy})
 					dy = 0
 				}
@@ -115,9 +115,9 @@ func (m *Machine) Run() chan mouse.Event {
 	return m.Sink
 }
 
-var clock60 = time.NewTicker(time.Millisecond * 30).C
+var clock = time.NewTicker(time.Millisecond * 30).C
 
-//var clock60 = time.NewTicker(time.Millisecond*20).C
+//var clock = time.NewTicker(time.Millisecond*20).C
 
 func abs(a int) int {
 	if a < 0 {
