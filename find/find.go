@@ -146,6 +146,9 @@ func Parity(br io.ByteReader, l byte, r byte, back bool) (n int) {
 		} else if b == r{
 			push--
 		}
+		if err == io.EOF{
+			break
+		}
 	}
 	if err != nil && err != io.EOF || push != 0{
 		return -1
