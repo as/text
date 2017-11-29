@@ -16,7 +16,7 @@ var (
 	Rights       = [...]byte{')', '}', ']', '>', '\''}
 	Free         = [...]byte{'"', '\'', '`', '\n'}
 	AlphaNum     = []byte("*&!%-_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-	AlphaNumFile = []byte(`*&!%-_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/:,\.`)
+	AlphaNumFile = []byte(`*&!%+#-_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/:,\.`)
 )
 
 func Run(br io.ByteScanner, s []byte) (n int) {
