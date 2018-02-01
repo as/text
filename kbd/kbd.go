@@ -33,9 +33,7 @@ func SendClient(hc text.Editor, e key.Event) {
 	if e.Direction == key.DirRelease {
 		return
 	}
-	if e.Rune == '\r' {
-		e.Rune = '\n'
-	}
+	e = preProcess(e)
 	defer markDirt(hc)
 	q0, q1 := hc.Dot()
 	switch e.Code {
@@ -135,4 +133,22 @@ func SendClient(hc text.Editor, e key.Event) {
 	q0 = q1
 	hc.Select(q0, q1)
 
+}
+
+func preProcess(e key.Event) key.Event {
+	r, ok := code2rune[e.Code]
+	if ok {
+		e.Rune = r
+	}
+	if e.Rune == '\r' {
+		e.Rune = '\n'
+	}
+	return e
+}
+
+var code2rune = map[key.Code]rune{
+	key.CodeReturnEnter:     '\n',
+	key.CodeDeleteBackspace: '\x08',
+	key.CodeTab:             '\x09',
+	key.CodeSpacebar:        '\x20',
 }
