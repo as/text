@@ -115,7 +115,7 @@ func (m *Machine) Run() chan mouse.Event {
 	return m.Sink
 }
 
-var clock = time.NewTicker(time.Millisecond * 30).C
+var clock = time.NewTicker(time.Millisecond * 60).C
 
 //var clock = time.NewTicker(time.Millisecond*20).C
 
