@@ -124,7 +124,7 @@ func SendClient(hc text.Editor, e key.Event) {
 }
 
 func preProcess(e key.Event) key.Event {
-	if e.Rune == "\t"{
+	if e.Rune == '\t'{
 		return e
 	}
 	r, ok := code2rune[e.Code]
