@@ -95,13 +95,12 @@ func (m *Machine) Run() chan mouse.Event {
 				select {
 				case e0 := <-m.Sink:
 					if !e.Button.IsWheel() {
-						m.Send(ScrollEvent{Event: e, Dy: 1})
+						m.SendFirst(ScrollEvent{Event: e, Dy: 1})
 						dy = 0
 						e = e0
 						fn = fn(m, e)
 						break
 					}
-					dy++
 				case <-clock:
 					m.SendFirst(ScrollEvent{Event: e, Dy: dy})
 					dy = 0
@@ -115,7 +114,7 @@ func (m *Machine) Run() chan mouse.Event {
 	return m.Sink
 }
 
-var clock = time.NewTicker(time.Millisecond * 60).C
+var clock = time.NewTicker(time.Millisecond * 30).C
 
 //var clock = time.NewTicker(time.Millisecond*20).C
 

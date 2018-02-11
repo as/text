@@ -1,24 +1,12 @@
 package kbd
 
 import (
-	"github.com/as/frame/font"
+	"github.com/as/font"
 	"github.com/as/text"
 	"github.com/as/text/find"
+	"github.com/as/ui/win"
 	"golang.org/x/mobile/event/key"
 )
-
-func setFont(ed text.Editor, size int) {
-	type Framer interface {
-		Dy() int
-		SetFont(*font.Font)
-		TTF() []byte
-	}
-	switch fr := ed.(type) {
-	case Framer:
-		fsize := 5 * fr.Dy() / 6
-		fr.SetFont(font.NewTTF(fr.TTF(), fsize))
-	}
-}
 
 // markDirt calls Mark if the editor implements
 // the find.Dirt interface
@@ -43,12 +31,18 @@ func SendClient(hc text.Editor, e key.Event) {
 		}
 
 		if e.Modifiers == key.ModControl {
-			df := 2
-			if key.CodeHyphenMinus == e.Code {
-				df = -2
-			}
-			setFont(hc, df)
 			return
+			switch hc := hc.(type) {
+			case *win.Win:
+				df := 2
+				if key.CodeHyphenMinus == e.Code {
+					df = -2
+				}
+				if ft, ok := hc.Face.(*font.Resizer); ok {
+					hc.SetFont(ft.New(ft.Dy() + df))
+				}
+				return
+			}
 		}
 	case key.CodeUpArrow, key.CodePageUp, key.CodeDownArrow, key.CodePageDown:
 		n := 1
