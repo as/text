@@ -34,7 +34,11 @@ func p(e mouse.Event) image.Point {
 func swapcolor(f *frame.Frame) {
 	f.Color.Pallete, f.Color.Hi = f.Color.Hi, f.Color.Pallete
 }
-func no(err error){if err != nil{log.Fatalln(err)}}
+func no(err error) {
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
 func main() {
 	driver.Main(func(src screen.Screen) {
 		wind, _ := src.NewWindow(&screen.NewWindowOptions{winSize.X, winSize.Y, "Win"})
@@ -46,11 +50,11 @@ func main() {
 		ft := frame.NewGoMono(fontdy)
 		ft2 := frame.NewGoMono(12)
 		w, err := win.New(src, sp, pad, winSize, &ft, nil)
-		dbg, _ := win.New(src, image.Pt(pad.X, 0), image.ZP, image.Pt(150,50), &ft2, nil)
+		dbg, _ := win.New(src, image.Pt(pad.X, 0), image.ZP, image.Pt(150, 50), &ft2, nil)
 		no(err)
 		mousein := NewMouse(time.Second/3, wind)
 		go func() {
-			time.Sleep(2*time.Second)
+			time.Sleep(2 * time.Second)
 			file := `\windows\system32\drivers\etc\hosts`
 			if len(os.Args) > 1 {
 				file = os.Args[1]
@@ -92,7 +96,7 @@ func main() {
 				if reg != 0 {
 					//swapcolor(w.Frame)
 					if e.Y < float32(pad.Y) {
-						w.FrameScroll((int(e.Y)/-(fontdy/3))*1)
+						w.FrameScroll((int(e.Y) / -(fontdy / 3)) * 1)
 					} else {
 						w.FrameScroll(1 + ((int(e.Y)-r.Max.Y)/(fontdy/3))*1)
 					}
@@ -142,7 +146,7 @@ func main() {
 				} else if e.Code == key.CodeDownArrow {
 					w.FrameScroll(2)
 				} else {
-					if e.Rune == -1{
+					if e.Rune == -1 {
 						continue
 					}
 					q0, _ = w.Dot()
@@ -166,8 +170,11 @@ func main() {
 				if !focused {
 					w.Refresh()
 				}
-				p0,p1 := w.Frame.Dot(); q0,q1 := w.Dot(); org := w.Origin(); fl := w.Frame.Nchars
-				dbg.Insert([]byte(fmt.Sprintf("p=%d:%d q=%d:%d org=%d framelen=%d\n\n\n\n",p0,p1,q0,q1,org,fl)), 0)
+				p0, p1 := w.Frame.Dot()
+				q0, q1 := w.Dot()
+				org := w.Origin()
+				fl := w.Frame.Nchars
+				dbg.Insert([]byte(fmt.Sprintf("p=%d:%d q=%d:%d org=%d framelen=%d\n\n\n\n", p0, p1, q0, q1, org, fl)), 0)
 				w.Upload(wind)
 				//dbg.Refresh()
 				dbg.Upload(wind)
@@ -198,7 +205,7 @@ func main() {
 				//w.Select2(but, q0, q1)
 				w.Select(q0, q1)
 				//if w.Dirty() {
-					wind.Send(paint.Event{})
+				wind.Send(paint.Event{})
 				//}
 			}
 		}

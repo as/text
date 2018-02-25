@@ -8,7 +8,7 @@ func NewBuffer() Buffer {
 	}
 }
 
-func BufferFrom(b []byte) Buffer{
+func BufferFrom(b []byte) Buffer {
 	return &buf{
 		R: b,
 	}
@@ -33,8 +33,8 @@ func (w *buf) Select(q0, q1 int64) {
 	w.Q0, w.Q1 = q0, q1
 }
 
-func (w *buf) WriteAt(p []byte, at int64) (n int, err error){
-	if at+int64(len(p)) > w.Len(){
+func (w *buf) WriteAt(p []byte, at int64) (n int, err error) {
+	if at+int64(len(p)) > w.Len() {
 		return 0, io.EOF
 	}
 	n = copy(w.R[at:], p)
@@ -76,7 +76,7 @@ func (w *buf) Delete(q0, q1 int64) (n int) {
 	return int(n + 1)
 }
 
-func (w *buf) Close() error{
+func (w *buf) Close() error {
 	w.R = nil
 	return nil
 }

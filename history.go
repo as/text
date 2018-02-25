@@ -32,6 +32,5 @@ func (w *history) Delete(q0, q1 int64) int {
 }
 func (w *history) Select(q0, q1 int64) {
 	w.Editor.Select(q0, q1)
-	w.l.Write(&event.Select{event.Rec{Kind: 's',Q0: q0, Q1: q1}})
+	w.l.Write(&event.Select{event.Rec{Kind: 's', Q0: q0, Q1: q1}})
 }
-

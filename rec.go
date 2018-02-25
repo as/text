@@ -5,15 +5,16 @@ import (
 	"github.com/as/worm"
 )
 
-func NewRecorder(l worm.Logger) *Recorder{
+func NewRecorder(l worm.Logger) *Recorder {
 	return &Recorder{
 		l: l,
 	}
 }
 
-type Recorder struct{
+type Recorder struct {
 	l worm.Logger
 }
+
 func (r *Recorder) Insert(p []byte, q0 int64) int {
 	if len(p) == 0 {
 		//return 0
@@ -26,10 +27,8 @@ func (r *Recorder) Delete(q0, q1 int64) int {
 	ev := &event.Delete{event.Rec{Kind: 'd', Q0: q0, Q1: q1}}
 
 	r.l.Write(ev)
-	return int(q1-q0)
+	return int(q1 - q0)
 }
 func (r *Recorder) Select(q0, q1 int64) {
-	r.l.Write(&event.Select{event.Rec{Kind: 's',Q0: q0, Q1: q1}})
+	r.l.Write(&event.Select{event.Rec{Kind: 's', Q0: q0, Q1: q1}})
 }
-
-

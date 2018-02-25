@@ -1,7 +1,5 @@
 package text
 
-import ()
-
 type Buffer interface {
 	Insert(p []byte, at int64) (n int64)
 	Delete(q0, q1 int64)

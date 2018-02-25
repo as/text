@@ -19,7 +19,7 @@ type Sender interface {
 
 func NewMouse(delay time.Duration, events Sender) *Mouse {
 	m := &Mouse{
-		Last:    []Click{Click{}, Click{}},
+		Last:    []Click{{}, {}},
 		doubled: delay,
 		Machine: NewMachine(events),
 	}

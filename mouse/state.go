@@ -86,6 +86,10 @@ func none(m *Machine, e mouse.Event) StateFn {
 	return none
 }
 
+func send(m *Machine, v interface{}) {
+	m.Sender <- v
+}
+
 func marking(m *Machine, e mouse.Event) StateFn {
 	m.first = e
 	m.lastsweep = e
@@ -93,15 +97,15 @@ func marking(m *Machine, e mouse.Event) StateFn {
 	t := time.Now()
 	m.Clickzone = image.Rect(-1, -2, 1, 2).Add(pt(e))
 	m.LastMark = MarkEvent{
-		Event: e,
-		Time: t,
+		Event:  e,
+		Time:   t,
 		Double: t.Sub(m.LastMark.Time) < m.double,
 	}
-	m.SendFirst(m.LastMark)
+	send(m, m.LastMark)
 	return sweeping(m, e)
 }
 func commit(m *Machine, e mouse.Event) StateFn {
-	m.SendFirst(CommitEvent{Event: e})
+	send(m, CommitEvent{Event: e})
 	return none
 }
 func selecting(m *Machine, e mouse.Event) StateFn {
@@ -116,7 +120,7 @@ func sweeping(m *Machine, e mouse.Event) StateFn {
 Loop:
 	for {
 		if m.terminates(e) {
-			m.SendFirst(SelectEvent{Event: e})
+			send(m, SelectEvent{Event: e})
 			return selecting(m, e)
 		}
 		if e.Direction == 2 {
@@ -139,9 +143,9 @@ Loop:
 			}
 		case <-clock:
 		}
-		if  m.Clickzone == image.ZR || pt(e).In(m.Clickzone) {
+		if m.Clickzone == image.ZR || pt(e).In(m.Clickzone) {
 			e.Button = m.first.Button
-			m.Send(SweepEvent{
+			send(m, SweepEvent{
 				Event: e,
 				Ctr:   m.ctr,
 				last:  m.lastsweep,
@@ -156,7 +160,7 @@ Loop:
 func snarfing(m *Machine, e mouse.Event) StateFn {
 	if m.press(e) {
 		if m.mid(e) {
-			m.SendFirst(SnarfEvent{Event: e})
+			send(m, SnarfEvent{Event: e})
 			return snarfing
 		}
 		if m.right(e) {
@@ -178,7 +182,7 @@ func inserting(m *Machine, e mouse.Event) StateFn {
 		case m.right(e):
 			//m.f.selecting = false
 			fmt.Printf("InsertEvent: = %#v\n", e)
-			m.SendFirst(InsertEvent{Event: e})
+			send(m, InsertEvent{Event: e})
 			return inserting
 		}
 	case e.Button == 1 && e.Direction == 2:
@@ -186,4 +190,3 @@ func inserting(m *Machine, e mouse.Event) StateFn {
 	}
 	return inserting
 }
-

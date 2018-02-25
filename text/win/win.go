@@ -21,8 +21,8 @@ var (
 type Win struct {
 	sp, pad, size image.Point
 	ft            frame.Font
-	Scrollr image.Rectangle
-	dirtysb bool
+	Scrollr       image.Rectangle
+	dirtysb       bool
 	*frame.Frame
 	buf     text.Buffer
 	scr     screen.Screen
@@ -35,23 +35,23 @@ type Win struct {
 }
 
 func New(scr screen.Screen, sp, pad, size image.Point, ft *frame.Font, colors *frame.Color) (*Win, error) {
-	if ft == nil{
+	if ft == nil {
 		x := frame.NewGoMono(12)
 		ft = &x
 	}
-	if colors == nil{
+	if colors == nil {
 		colors = &frame.Acme
 	}
 	b, err := scr.NewBuffer(size)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 	w := &Win{
-		scr: scr,
-		Frame: &frame.Frame{Font: *ft, Color: *colors},
-		pad: pad,
-		b: b,
-		buf: text.NewBuffer(),
+		scr:     scr,
+		Frame:   &frame.Frame{Font: *ft, Color: *colors},
+		pad:     pad,
+		b:       b,
+		buf:     text.NewBuffer(),
 		Clients: []*Client{new(Client), new(Client), new(Client), new(Client)},
 	}
 	w.Resize(b.Bounds().Max)
@@ -64,7 +64,7 @@ func (w *Win) Refresh() {
 	w.refresh = true
 }
 
-func (w *Win) Release(){
+func (w *Win) Release() {
 }
 
 func (w *Win) Move(sp image.Point) {
@@ -72,12 +72,12 @@ func (w *Win) Move(sp image.Point) {
 }
 
 func (w *Win) Upload(wind screen.Window) {
-	if !w.refresh{
+	if !w.refresh {
 		var wg sync.WaitGroup
 		wg.Add(len(w.Cache()))
-		if w.dirtysb{
+		if w.dirtysb {
 			wg.Add(1)
-			go func(){ wind.Upload(w.sp.Add(w.Scrollr.Min), w.b, w.Scrollr); wg.Done() }()
+			go func() { wind.Upload(w.sp.Add(w.Scrollr.Min), w.b, w.Scrollr); wg.Done() }()
 			w.dirtysb = false
 		}
 		for _, r := range w.Cache() {
@@ -93,20 +93,20 @@ func (w *Win) Upload(wind screen.Window) {
 }
 
 func (w *Win) Resize(size image.Point) (err error) {
-	if w.b, err = w.scr.NewBuffer(size); err != nil{
+	if w.b, err = w.scr.NewBuffer(size); err != nil {
 		return err
 	}
 	r := image.Rect(0, 0, size.X, size.Y)
 	w.Scrollr = r
-	w.Scrollr.Max.X = w.pad.X-3
-	
+	w.Scrollr.Max.X = w.pad.X - 3
+
 	r.Min.X += w.pad.X
 	r.Min.Y += w.pad.Y
 	r.Max.Y -= w.pad.Y
 	r.Max.X -= w.pad.X
-	 w.Frame.Reset(r, w.b.RGBA(), w.Font)
+	w.Frame.Reset(r, w.b.RGBA(), w.Font)
 	w.Frame = frame.New(r, w.Frame.Font, w.b.RGBA(), w.Frame.Color)
-	
+
 	w.Fill()
 	w.Refresh()
 	w.drawsb()
@@ -114,7 +114,7 @@ func (w *Win) Resize(size image.Point) (err error) {
 }
 
 func (w *Win) Flush() {
-	if w.Frame != nil{
+	if w.Frame != nil {
 		w.Frame.Flush()
 	}
 	w.dirty = false
@@ -138,25 +138,25 @@ func (w *Win) Insert(p []byte, at int64) (n int64) {
 		return
 	}
 	w.dirty = true
-	di := (at-w.org)
+	di := (at - w.org)
 	si := clamp(-di, 0, int64(len(p)))
-	if di < 0{
+	if di < 0 {
 		di = 0
 	}
 	w.Frame.Insert(p[si:], di)
 	return n
 }
-func (w *Win) Delete(q0, q1 int64) (n int64){
-/*
-	n = w.buf.Delete(p, at)
-	if q0 < w.q0{
-		w.q0 -= min(n, w.Q0-q0)
-	}
-	if q0 < w.q1{
-		w.q1 -= min(n, w.q1-q0)
-	}
-*/
-return n
+func (w *Win) Delete(q0, q1 int64) (n int64) {
+	/*
+		n = w.buf.Delete(p, at)
+		if q0 < w.q0{
+			w.q0 -= min(n, w.Q0-q0)
+		}
+		if q0 < w.q1{
+			w.q1 -= min(n, w.q1-q0)
+		}
+	*/
+	return n
 }
 
 func (w *Win) Select2(id int, p0, p1 int64) {
