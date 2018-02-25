@@ -4,24 +4,24 @@ import (
 	//	"github.com/as/clip"
 	//
 	"fmt"
-	"github.com/as/font"
-	"github.com/as/text"
-	"github.com/as/text/win"
-	"github.com/as/worm"
-	"golang.org/x/exp/shiny/driver"
-	"golang.org/x/exp/shiny/screen"
-	"golang.org/x/image/font/gofont/gomedium"
-	"golang.org/x/mobile/event/key"
-	"golang.org/x/mobile/event/lifecycle"
-	"golang.org/x/mobile/event/mouse"
-	"golang.org/x/mobile/event/paint"
-	"golang.org/x/mobile/event/size"
 	"image"
 	"image/draw"
 	"io/ioutil"
 	"log"
 	"os"
 	"time"
+
+	"github.com/as/font"
+	"github.com/as/text"
+	"github.com/as/text/win"
+	"github.com/as/worm"
+	"golang.org/x/exp/shiny/driver"
+	"golang.org/x/exp/shiny/screen"
+	"golang.org/x/mobile/event/key"
+	"golang.org/x/mobile/event/lifecycle"
+	"golang.org/x/mobile/event/mouse"
+	"golang.org/x/mobile/event/paint"
+	"golang.org/x/mobile/event/size"
 
 	kbd "github.com/as/text/kbd"
 	mous "github.com/as/text/mouse"
@@ -54,12 +54,12 @@ func main() {
 
 		ed, _ := text.Open(text.NewBuffer())
 		ed = text.NewHistory(ed, lg)
-		w := win.New(r.Min, pad, b.RGBA(), ed, font.NewTTF(gomedium.TTF, fontdy))
+		w := win.New(r.Min, pad, b.RGBA(), ed, font.NewFace(fontdy))
 
 		r.Min.X = r.Max.X
 		r.Max.X = winSize.X
 		b1, _ := src.NewBuffer(image.Pt(winSize.X/3, winSize.Y))
-		st0 := win.New(sp1, pad, b1.RGBA(), nil, font.NewTTF(gomedium.TTF, 11))
+		st0 := win.New(sp1, pad, b1.RGBA(), nil, font.NewFace(11))
 
 		wind.Upload(image.Pt(0, 0), b, b.Bounds())
 		wind.Upload(r.Min, b1, b.Bounds())
@@ -119,7 +119,7 @@ func main() {
 				but = int(e.Button)
 				w.Select(q0, q1)
 				ckdirt()
-			case mous.ClickEvent, mous.SelectEvent:
+			case mous.SelectEvent:
 				but = but
 				//w.Select2(but, q0, q1)
 				w.Select(q0, q1)
