@@ -33,7 +33,7 @@ func (w *Win) Scroll(dl int) {
 			return
 		}
 		r := w.Frame.Bounds()
-		org += w.IndexOf(image.Pt(r.Min.X, r.Min.Y+dl*w.Font.Dy()))
+		org += w.IndexOf(image.Pt(r.Min.X, r.Min.Y+dl*w.Face.Dy()))
 		w.SetOrigin(org, true)
 	}
 }

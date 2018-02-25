@@ -6,8 +6,8 @@ import (
 
 	"golang.org/x/exp/shiny/screen"
 
+	"github.com/as/font"
 	"github.com/as/frame"
-	"github.com/as/frame/font"
 	"github.com/as/text"
 	//"fmt"
 	"image/draw"
@@ -82,12 +82,12 @@ func (w *Win) SetEditor(ed text.Editor) {
 	w.dirty = true
 }
 
-func New(sp, pad image.Point, b *image.RGBA, ed text.Editor, ft *font.Font) *Win {
+func New(sp, pad image.Point, b *image.RGBA, ed text.Editor, ft font.Face) *Win {
 	r := b.Bounds()
 	r.Min.X += pad.X
 	r.Min.Y += pad.Y
 	r.Max.Y -= pad.Y
-	fr := frame.New(r, ft, b, frame.A)
+	fr := frame.New(b, r, &frame.Config{Face: ft, Color: frame.A})
 	size := b.Bounds()
 	w := &Win{
 		sp:     sp,
