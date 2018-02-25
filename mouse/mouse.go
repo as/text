@@ -113,31 +113,6 @@ func Sweep(w text.Sweeper, e SweepEvent, padY int, s, q0, q1 int64, drain text.S
 		return q1, q1, q
 	}
 	return q1, q, q1
-	/*
-		if s == q0 {
-			if q < q0 {	// crossover on the left
-				q1 = q0
-				s = q0
-				w.Select(q, s)
-				q0 = q
-			} else if q > q0 { // increasing to the right
-				w.Select(s, q)
-				q1 = q
-			}
-		} else {
-			if q > q1 {
-				q0 = q1
-				s = q1
-				w.Select(s, q)
-				q1 = q
-			} else {
-				w.Select(q, s)
-				q0 = q
-			}
-		}
-		return s, q0, q1
-
-	*/
 }
 func (m *Mouse) Process(e mouse.Event) {
 	m.Sink <- e
