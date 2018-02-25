@@ -4,7 +4,7 @@ import (
 	//	"github.com/as/clip"
 	//
 	"fmt"
-	"github.com/as/frame/font"
+	"github.com/as/font"
 	"github.com/as/text"
 	"github.com/as/text/win"
 	"github.com/as/worm"
@@ -21,7 +21,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"sync"
 	"time"
 
 	kbd "github.com/as/text/kbd"
@@ -144,20 +143,11 @@ func main() {
 				//w.Resize(winSize.Sub(image.Pt(0, tagY*2)))
 				wind.Send(paint.Event{})
 			case paint.Event:
-				var wg sync.WaitGroup
-				wg.Add(len(w.Cache()))
-				for _, r := range w.Cache() {
-					go func(r image.Rectangle) { wind.Upload(sp.Add(r.Min), b, r); wg.Done() }(r)
-				}
-				wg.Add(len(st0.Cache()))
-				for _, r := range st0.Cache() {
-					go func(r image.Rectangle) { wind.Upload(sp1.Add(r.Min), b1, r); wg.Done() }(r)
-				}
-				//wind.Upload(image.Pt(winSize.X-winSize.X/3,0), b1, b1.Bounds())
+				wind.Upload(sp, b, b.Bounds())
+				wind.Upload(sp1, b1, b1.Bounds())
 				wind.Publish()
 				w.Flush()
 				st0.Flush()
-				wg.Wait()
 			case lifecycle.Event:
 				if e.To == lifecycle.StageDead {
 					return
