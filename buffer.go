@@ -23,14 +23,15 @@ func (w *buf) Len() int64 {
 	return int64(len(w.R))
 }
 
-func (w *buf) Select(q0, q1 int64) {
+func (w *buf) Select(q0, q1 int64){
 	if q0 < 0 {
 		return
 	}
 	if q1 > w.Len() {
 		q1 = w.Len()
 	}
-	w.Q0, w.Q1 = q0, q1
+	w.Q0, q0 = q0, w.Q0
+	w.Q1, q1 = q1, w.Q1
 }
 
 func (w *buf) WriteAt(p []byte, at int64) (n int, err error) {
