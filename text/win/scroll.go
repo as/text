@@ -4,9 +4,9 @@ import "image"
 import "image/draw"
 import "image/color"
 
-var(
-	LtGray = image.NewUniform(color.RGBA{66 * 2+25, 66 * 2+25, 66*2 + 35, 255})
- SBColor      = image.NewUniform(color.RGBA{255 - 32, 255 - 32, 224 - 32, 255})
+var (
+	LtGray  = image.NewUniform(color.RGBA{66*2 + 25, 66*2 + 25, 66*2 + 35, 255})
+	SBColor = image.NewUniform(color.RGBA{255 - 32, 255 - 32, 224 - 32, 255})
 )
 
 func (w *Win) FrameScroll(dl int) {

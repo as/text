@@ -11,9 +11,10 @@ func Trace(ed Editor) Editor {
 type tracer struct {
 	Editor
 }
+
 /*
 func (x *tracer) WriteAt(p []byte, at int64) (int, error){
-	fmt.Printf("WriteAt: %q @ %d\n", p, at) 
+	fmt.Printf("WriteAt: %q @ %d\n", p, at)
 	return x.Editor.(io.WriterAt).WriteAt(p, at)
 }
 */

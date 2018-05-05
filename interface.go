@@ -1,8 +1,8 @@
 package text
 
 import (
-	"image"
 	"github.com/as/event"
+	"image"
 )
 
 type Buffer interface {
@@ -14,18 +14,18 @@ type Buffer interface {
 }
 
 type Selector interface {
-	Select(q0, q1 int64)
+	Select(q0, q1 int64) 
 	Dot() (q0, q1 int64)
 }
 
-type File interface{
+type File interface {
 	Named
 	Editor
 	Put() error
 	Get() error
 }
 
-type Named interface{
+type Named interface {
 	Name() string
 }
 
@@ -54,10 +54,10 @@ type Ruler interface {
 	Height() int
 }
 
-type Shower interface{
+type Shower interface {
 	Show(min int) bool
 }
-type Jumper interface{
+type Jumper interface {
 	Jump(mouseFunc func(image.Point))
 }
 
@@ -95,7 +95,7 @@ type History interface {
 	Apply()
 }
 
-type Logger interface{
+type Logger interface {
 	Write(event.Record) (err error)
 	ReadAt(at int64) (event.Record, error)
 	Len() int64

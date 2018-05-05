@@ -1,14 +1,14 @@
 package kbd
 
 import (
-	"testing"
 	"github.com/as/text"
 	"golang.org/x/mobile/event/key"
+	"testing"
 )
 
-func TestSendClientContW(t *testing.T){
+func TestSendClientContW(t *testing.T) {
 	ed, err := text.Open(text.NewBuffer())
-	if err != nil{
+	if err != nil {
 		t.Log(err)
 		t.FailNow()
 	}
@@ -20,7 +20,7 @@ func TestSendClientContW(t *testing.T){
 	SendClient(ed, key.Event{Rune: rune(17), Direction: 1})
 	SendClient(ed, key.Event{Rune: rune(17), Direction: 1})
 	have = ed.Bytes()
-	if string(have) != string(want){
+	if string(have) != string(want) {
 		t.Logf("bad index: have=%q want=%q\n", have, want)
 	}
 }

@@ -20,11 +20,11 @@ type Mouse struct {
 	*Machine
 }
 
-func NewMouse(delay time.Duration, events text.Sender) *Mouse {
+func NewMouse(delay time.Duration, mousein <-chan mouse.Event, out chan<- interface{}) *Mouse {
 	m := &Mouse{
 		Last:    []Click{{}, {}},
 		doubled: delay,
-		Machine: NewMachine(events),
+		Machine: NewMachine(mousein, out),
 	}
 	go m.Machine.Run()
 	return m
@@ -95,8 +95,8 @@ func Sweep(w text.Sweeper, e SweepEvent, padY int, s, q0, q1 int64, drain text.S
 			w.Scroll(+((y-hi)%units + 1) * 3)
 		}
 		if drain != nil {
-			drain.SendFirst(Drain{})
-			drain.Send(DrainStop{})
+			//			drain.SendFirst(Drain{}) //TODO
+			//			drain.Send(DrainStop{}) //TODO
 		}
 
 	} else if !e.Motion() {
@@ -113,10 +113,6 @@ func Sweep(w text.Sweeper, e SweepEvent, padY int, s, q0, q1 int64, drain text.S
 		return q1, q1, q
 	}
 	return q1, q, q1
-}
-func (m *Mouse) Process(e mouse.Event) {
-	m.Sink <- e
-	return
 }
 
 func (m *Mouse) Pt() image.Point {

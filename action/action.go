@@ -55,8 +55,8 @@ func Dirof(file string) string {
 	file = clean(file)
 	return filepath.Dir(file)
 }
-func IsDir(path string) bool{ return isdir(path)}
-func IsFile(path string) bool{ return isfile(path)}
+func IsDir(path string) bool  { return isdir(path) }
+func IsFile(path string) bool { return isfile(path) }
 func isdir(path string) bool {
 	fi, err := os.Stat(path)
 	if err != nil {
@@ -80,7 +80,6 @@ func SplitPath(path string) (name, addr string) {
 		// No colon, so we're done
 		return name, ""
 	}
-
 
 	if x == 0 {
 		if len(name) == 1 {

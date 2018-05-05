@@ -4,7 +4,6 @@ import (
 	"image"
 	"time"
 
-	"github.com/as/text"
 	"golang.org/x/mobile/event/mouse"
 )
 
@@ -13,24 +12,23 @@ import (
 // that drive the StateFns
 type Machine struct {
 	r         image.Rectangle
-	Sink      chan mouse.Event
+	Sink      <-chan mouse.Event
+	Sender    chan<- interface{}
 	down      mouse.Button
 	first     mouse.Event
 	double    time.Duration
 	lastsweep mouse.Event
 	ctr       int
-	// Should only send events, no recieving.
-	text.Sender
 	LastMark  MarkEvent
 	Clickzone image.Rectangle
 }
 
 // NewMachine initialize a new state machine with no-op
 // functions for all chording events.
-func NewMachine(deque text.Sender) *Machine {
+func NewMachine(mousein <-chan mouse.Event, out chan<- interface{}) *Machine {
 	return &Machine{
-		Sink:   make(chan mouse.Event),
-		Sender: deque,
+		Sink:   mousein,
+		Sender: out,
 		down:   0,
 		double: time.Second / 3,
 	}
@@ -85,33 +83,13 @@ func (m *Machine) terminates(e mouse.Event) bool {
 	return m.release(e) && m.down == 0
 }
 
-func (m *Machine) Run() chan mouse.Event {
+func (m *Machine) Run() {
 	go func() {
 		fn := none
-		dy := 0
 		for e := range m.Sink {
-			if e.Button.IsWheel() {
-				dy++
-				select {
-				case e0 := <-m.Sink:
-					if !e.Button.IsWheel() {
-						m.SendFirst(ScrollEvent{Event: e, Dy: 1})
-						dy = 0
-						e = e0
-						fn = fn(m, e)
-						break
-					}
-				case <-clock:
-					m.SendFirst(ScrollEvent{Event: e, Dy: dy})
-					dy = 0
-				}
-			} else {
-				dy = 0
-				fn = fn(m, e)
-			}
+			fn = fn(m, e)
 		}
 	}()
-	return m.Sink
 }
 
 var clock = time.NewTicker(time.Millisecond * 30).C

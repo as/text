@@ -6,6 +6,7 @@ import (
 )
 
 var ErrNilBuffer = errors.New("Nil Buffer")
+
 // Open returns an Editor capable of managing a selection
 // on b. The selection is maintained automatically as long
 // as insertions and deletions happen through the returned
@@ -25,14 +26,14 @@ type client struct {
 	q0, q1 int64
 }
 
-func (c *client) WriteAt(p []byte, q0 int64) (n int, err error){
-	 if t, ok := c.Buffer.(io.WriterAt); ok{
-	 	n, err = t.WriteAt(p, q0)
+func (c *client) WriteAt(p []byte, q0 int64) (n int, err error) {
+	if t, ok := c.Buffer.(io.WriterAt); ok {
+		n, err = t.WriteAt(p, q0)
 		//q0, _ = c.clamp(q0, q0)
 		//c.q0, c.q1 = Coherence(-1, q0, q0+int64(n), c.q0, c.q1)
 		//c.q0, c.q1 = Coherence(1, q0, q0+int64(n), c.q0, c.q1)
 		return n, err
-		t=t
+		t = t
 	}
 	c.Delete(q0, q0+int64(len(p)))
 	n = c.Insert(p, q0)
@@ -61,6 +62,6 @@ func (c *client) Delete(q0, q1 int64) (n int) {
 	c.q0, c.q1 = Coherence(-1, q0, q1, c.q0, c.q1)
 	return n
 }
-func (c *client) Close() error{
+func (c *client) Close() error {
 	return c.Buffer.Close()
 }
