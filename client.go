@@ -35,8 +35,10 @@ func (c *client) WriteAt(p []byte, q0 int64) (n int, err error) {
 		return n, err
 		t = t
 	}
-	c.Delete(q0, q0+int64(len(p)))
 	n = c.Insert(p, q0)
+	q0 += int64(n)
+	q1 := q0 + int64(n)
+	c.Delete(q0, q1)
 	return
 }
 

@@ -1,5 +1,11 @@
 package node
 
+import (
+	"image"
+
+	"github.com/as/shiny/screen"
+)
+
 type Node struct {
 	Sp, size, pad image.Point
 	dirty         bool

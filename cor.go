@@ -4,8 +4,9 @@ package text
 // This bad name will be changed
 
 import (
-	"github.com/as/worm"
 	"time"
+
+	"github.com/as/worm"
 )
 
 // COR processes a stream of event records and writes them to a coalescing logger.
@@ -39,8 +40,8 @@ func (c *COR) Len() int64 {
 func (c *COR) Bytes() []byte {
 	return c.ed.Bytes()
 }
-func (c *COR) Select(q0, q1 int64){
-	c.q0= q0
+func (c *COR) Select(q0, q1 int64) {
+	c.q0 = q0
 	c.q1 = q1
 }
 func (c *COR) Dot() (q0, q1 int64) {
