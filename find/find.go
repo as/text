@@ -192,7 +192,6 @@ func FindNext(f text.Editor, i, j int64, text []byte) (q0, q1 int64) {
 		q0 += j
 	}
 	q1 = q0 + int64(len(x))
-	println("late return", q0, q1)
 	return q0, q1
 }
 
