@@ -1,8 +1,9 @@
 package text
 
 import (
-	"github.com/as/event"
 	"image"
+
+	"github.com/as/event"
 )
 
 type Buffer interface {
@@ -14,7 +15,7 @@ type Buffer interface {
 }
 
 type Selector interface {
-	Select(q0, q1 int64) 
+	Select(q0, q1 int64)
 	Dot() (q0, q1 int64)
 }
 

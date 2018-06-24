@@ -1,9 +1,10 @@
 package kbd
 
 import (
+	"testing"
+
 	"github.com/as/text"
 	"golang.org/x/mobile/event/key"
-	"testing"
 )
 
 func TestSendClientContW(t *testing.T) {

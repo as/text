@@ -179,7 +179,7 @@ func findParity(br io.ByteReader, l byte, r byte, back bool) (n int) {
 }
 
 func FindNext(f text.Editor, i, j int64, text []byte) (q0, q1 int64) {
-//	i, j := f.Dot()
+	//	i, j := f.Dot()
 	p := f.Bytes()
 	x := text
 	q0 = int64(bytes.Index(p[j:], x))
@@ -192,7 +192,6 @@ func FindNext(f text.Editor, i, j int64, text []byte) (q0, q1 int64) {
 		q0 += j
 	}
 	q1 = q0 + int64(len(x))
-	println("late return", q0, q1)
 	return q0, q1
 }
 

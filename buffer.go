@@ -23,7 +23,7 @@ func (w *buf) Len() int64 {
 	return int64(len(w.R))
 }
 
-func (w *buf) Select(q0, q1 int64){
+func (w *buf) Select(q0, q1 int64) {
 	if q0 < 0 {
 		return
 	}

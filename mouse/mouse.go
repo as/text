@@ -2,10 +2,11 @@
 package mouse
 
 import (
-	"github.com/as/text"
-	"golang.org/x/mobile/event/mouse"
 	"image"
 	"time"
+
+	"github.com/as/text"
+	"golang.org/x/mobile/event/mouse"
 )
 
 type Mouse struct {
