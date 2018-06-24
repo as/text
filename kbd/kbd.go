@@ -38,7 +38,7 @@ func SendClient(hc text.Editor, e key.Event) {
 				if key.CodeHyphenMinus == e.Code {
 					df = -2
 				}
-				if ft, ok := hc.Face.(*font.Resizer); ok {
+				if ft, ok := hc.Face().(*font.Resizer); ok {
 					hc.SetFont(ft.New(ft.Dy() + df))
 				}
 				return
