@@ -49,7 +49,7 @@ func Region5(r0, r1, q0, q1 int64) int {
 // sign < 0, text is deleted, otherwise text is inserted.
 func Coherence(sign int, r0, r1, q0, q1 int64) (int64, int64) {
 	if sign < 0 {
-		// deleting r0:r1 removes r1-r0+1 chars
+		// deleting r0:r1 removes r1-r0 chars
 		return coDelete(r0, r1, q0, q1)
 	}
 	return coInsert(r0, r1, q0, q1)
@@ -80,7 +80,7 @@ func CoherenceM(sign int, r0, r1 int64, q map[string][2]int64) {
 }
 
 func coInsert(r0, r1, q0, q1 int64) (int64, int64) {
-	dx := r1 - r0 + 1
+	dx := r1 - r0
 	if dx == 0 {
 		return q0, q1
 	}
@@ -97,25 +97,24 @@ func coInsert(r0, r1, q0, q1 int64) (int64, int64) {
 }
 
 func coDelete(r0, r1, q0, q1 int64) (int64, int64) {
-	dx := r1 - r0 + 1
+	dx := r1 - r0
 	switch Region5(r0, r1, q0, q1) {
 	case -2:
 		q0 -= dx
 		q1 -= dx
 	case -1:
-
-		q0 += r1 - q0 + 1
-		q0 -= dx
+		q0 = r0
 		q1 -= dx
 	case 0:
 		if q0 < r0 { // r in q
-			q1 -= r1 - q0 + 1
+			q1 -= r1 - q0
 		} else { // q in r
-			q0 -= q0 - r0 + 1
+			q0 -= q0 - r0
 			q1 = q0
 		}
 	case 1:
-		q1 -= q1 - r0 + 1
+		q1 = r0
+		//q1 -= q1 - r0
 	case 2:
 		// nop
 	}
@@ -136,7 +135,7 @@ func delete(q0, q1 int64) (n int64) {
 	x := []int64{q0, q1}
 	copy(s[x[0]:], s[x[1]+1:])
 	s = s[:x[1]-x[0]]
-	return q1 - q0 + 1
+	return q1 - q0
 }
 func sel(name string, q0, q1 int64) {
 	clients[name] = [2]int64{q0, q1}

@@ -74,7 +74,7 @@ func (w *buf) Delete(q0, q1 int64) (n int) {
 	nr := w.Len()
 	copy(w.R[q0:], w.R[q1:][:nr-q1])
 	w.R = w.R[:nr-int64(n)]
-	return int(n + 1)
+	return int(n)
 }
 
 func (w *buf) Close() error {

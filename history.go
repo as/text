@@ -1,6 +1,8 @@
 package text
 
 import (
+	"io"
+
 	"github.com/as/event"
 	"github.com/as/worm"
 )
@@ -15,6 +17,15 @@ func NewHistory(ed Editor, l worm.Logger) Editor {
 		Editor: ed,
 		l:      l,
 	}
+}
+
+func (w *history) WriteAt(p []byte, q0 int64) (int, error) {
+	if len(p) == 0 {
+		return 0, nil
+	}
+	n, err := w.Editor.(io.WriterAt).WriteAt(p, q0)
+	w.l.Write(&event.Write{Rec: event.Rec{Kind: 'w', P: p, Q0: q0, Q1: q0 + int64(len(p))}})
+	return n, err
 }
 
 func (w *history) Insert(p []byte, q0 int64) int {
