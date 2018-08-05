@@ -29,6 +29,9 @@ func (r *Recorder) Delete(q0, q1 int64) int {
 	r.l.Write(ev)
 	return int(q1 - q0)
 }
+func (r *Recorder) Write(p []byte) (int, error) {
+	return r.Insert(p, (^int64(0))>>1), nil
+}
 func (r *Recorder) Select(q0, q1 int64) {
 	r.l.Write(&event.Select{event.Rec{Kind: 's', Q0: q0, Q1: q1}})
 }
