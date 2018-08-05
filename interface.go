@@ -6,14 +6,6 @@ import (
 	"github.com/as/event"
 )
 
-type Buffer interface {
-	Insert(p []byte, at int64) (n int)
-	Delete(q0, q1 int64) (n int)
-	Len() int64
-	Bytes() []byte
-	Close() error
-}
-
 type Selector interface {
 	Select(q0, q1 int64)
 	Dot() (q0, q1 int64)
