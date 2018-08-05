@@ -1,6 +1,13 @@
 package text
 
-import "io"
+type Buffer interface {
+	Insert(p []byte, at int64) (n int)
+	Delete(q0, q1 int64) (n int)
+	Write(p []byte) (n int, err error)
+	Len() int64
+	Bytes() []byte
+	Close() error
+}
 
 func NewBuffer() Buffer {
 	return &buf{
@@ -30,15 +37,18 @@ func (w *buf) Select(q0, q1 int64) {
 	if q1 > w.Len() {
 		q1 = w.Len()
 	}
-	w.Q0, q0 = q0, w.Q0
-	w.Q1, q1 = q1, w.Q1
+	w.Q0 = q0
+	w.Q1 = q1
 }
 
-func (w *buf) WriteAt(p []byte, at int64) (n int, err error) {
-	if at+int64(len(p)) > w.Len() {
-		return 0, io.EOF
-	}
-	n = copy(w.R[at:], p)
+// Write appends the contents of p to the buffer.
+func (w *buf) Write(p []byte) (int, error) {
+	w.R = append(w.R, p...)
+	return len(p), nil
+}
+
+func (w *buf) WriteAt(p []byte, offset int64) (n int, err error) {
+	n = copy(w.R[offset:], p)
 	return
 }
 
@@ -95,3 +105,25 @@ func (w *buf) Dirty() bool {
 func (w *buf) Bytes() []byte {
 	return w.R
 }
+
+/*
+	// TODO(as): Below is the correct implementation of WriteAt, which
+	// appends to the buffer
+
+	// WriteAt writes the contents of p at the given offset. It writes
+	// through existing data in the buffer and appends to it if p overflows
+	// the buffer at that offset.
+	func (w *buf) WriteAt(p []byte, offset int64) (n int, err error) {
+		if offset >= int64(len(p)) {
+			w.R = append(w.R, p...)
+			return len(p), nil
+		}
+
+		if n = copy(w.R[offset:], p); n == len(p){
+			return n, nil
+		}
+
+		w.R = append(w.R, p[n:]...)
+		return len(p), nil
+	}
+*/
